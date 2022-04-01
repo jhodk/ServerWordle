@@ -1,0 +1,12 @@
+{
+	
+	"token": "YOURDISCORDBOTTOKEN",
+
+	"mysql": {
+        "host": "localhost",
+        "user": "YOURUSERNAME",
+        "password": "YOURPASSWORD",
+        "database": "YOURDATABASE"
+    }
+
+}
