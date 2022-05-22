@@ -31,7 +31,7 @@ const UserStates = {
 //var userState = UserStates.PreGame;
 
 
-const {createConnection} = require('mysql');
+const {createConnection} = require('mysql2');
 
 let con = createConnection(config.mysql);
 
