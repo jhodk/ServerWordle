@@ -6,7 +6,7 @@ Want to try it out?
 
 If you're a server admin then you can [invite the ServerWordle bot](https://discord.com/api/oauth2/authorize?client_id=940265535650799647&permissions=11280&scope=bot)!
 
-Once you have added the bot it will create a "wordle-bot" text channel and pin a help message to it. Use !summonserverwordle in another channel if you prefer the bot to post there.
+Once you have added the bot it will create a "wordle-bot" text channel and pin a help message to it. Use !summonserverwordle in another channel if you prefer the bot to post there instead.
 
 Or you can join the test server by clicking [this link](https://discord.gg/bDthXD6Yu3)!
 
