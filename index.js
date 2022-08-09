@@ -3,7 +3,8 @@ const {
 	Intents,
 	MessageActionRow,
 	MessageButton,
-	MessageEmbed
+	MessageEmbed,
+	Permissions
 } = require('discord.js');
 const util = require('util');
 const config = require('./config.json');
@@ -20,6 +21,7 @@ const UserStates = {
 	Guess5:5,
 	Guess6:6
 }
+let customChannelCache = new Map();
 const db = require('./database.js');
 const WordleBot = new Client({
 	intents:[Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES, 
@@ -31,20 +33,17 @@ db.connect(async  err => {
     if (err) return console.log(err);
     console.log(`MySQL has been connected!`);
     console.log("Local time: "+moment().format('YYYY-MM-DD HH:mm:ss'));
-	
+	buildCustomChannelCache();
 	console.log("executing bot login");
 	WordleBot.login(config.token);
 	console.log("done executing bot login");
-	
 	refreshAnswers();
 	setInterval(refreshAnswers, 1000 * 60 * 1);
-	aliveStatus();
-	setInterval(aliveStatus, 1000 * 60 * 60);
+	//aliveStatus();
+	//setInterval(aliveStatus, 1000 * 60 * 60);
 	metricsUpdate();
 	setInterval(metricsUpdate, 1000 * 60 * 60);
-
 });
-
 
 async function test() {
 	console.log((await db.qryServersWithAnswers()));
@@ -66,9 +65,10 @@ WordleBot.on("guildCreate", async guild => {
 			await guild.channels.create("wordle-bot", "text");
 			channel = WordleBot.channels.cache.find(e => (e.guildId === guild.id) && (e.name === "wordle-bot"));
 		}
-		channel.send(`Welcome to the wordle-bot channel. First type !join, then DM me each day to play. View your stats with !stats.`).then(msg => msg.pin());
+		await updateCustomChannel(guild.id,channel.id);
+		channel.send(`Hi, I'm ServerWordle. First type !join, then DM me each day to play wordle against everyone on your server. View your stats with !stats. Admins can change my channel with !summonserverwordle.`).then(msg => msg.pin());
 		const owner = await guild.fetchOwner();
-		owner.send(`Thanks for inviting ServerWordle! I've set up a wordle-bot text channel in your server. Head over there to get started!`);
+		owner.send(`Thanks for inviting ServerWordle! I've set up a wordle-bot text channel in your server. Head over there to get started! If you want to use another channel for the bot, type !summonserverwordle in the desired channel.`);
 		console.log(`New guild joined: ${guild.name} (id: ${guild.id}). This guild has ${guild.memberCount} members!`);
 	}
 	catch(e){
@@ -79,12 +79,34 @@ WordleBot.on("guildCreate", async guild => {
  });
 
 WordleBot.on('messageCreate', async (message) => {
+	
+	//!summonserverwordle
+	if(message.channel.type != 'DM' && !message.author.bot && message.content == "!summonserverwordle"){
+		if(message.member.permissions.has(Permissions.FLAGS.MANAGE_CHANNELS)) {
+			await updateCustomChannel(message.guildId, message.channelId);
+			const channel = message.channel;
+			try{
+			channel.send(`Hi, I'm ServerWordle. First type !join, then DM me each day to play wordle against everyone on your server. View your stats with !stats. Admins can change my channel with !summonserverwordle.`).then(msg => msg.pin());
+			}
+			catch(e){
+				console.log("Error sending welcome message and pin after !summonserverwordle for channel "+message.channel.name+" "+message.channelId+" on server "+message.guild.name+ " "+message.guildId);
+			}
+		}
+		else{
+			message.author.send("You need to have the MANAGE_CHANNELS permission to use the !summonserverwordle command!");
+		}
+	}
+
+	const targetChannelId = "-1";
+	if(message.channel.type != 'DM' && !message.author.bot){
+		targetChannelId = customChannelCache.get(message.guildId);
+	}
 	// !stats
-	if(message.channel.name == "wordle-bot" && message.content == "!stats" && message.author.bot == false) {
+	if(message.channel.id == targetChannelId && message.content == "!stats" && message.author.bot == false) {
 		await Stats.handleRequest(message);
 	}
 	// !join
-	if(message.channel.name == "wordle-bot" && message.content == "!join" && message.author.bot == false) {
+	if(message.channel.id == targetChannelId && message.content == "!join" && message.author.bot == false) {
 		const msg = new Messages(message);
 		const userServerGameRecords = await db.qryUserServerGameRecords(message.author.id, message.guildId);
 		if(userServerGameRecords.length > 0) {
@@ -110,7 +132,8 @@ WordleBot.on('messageCreate', async (message) => {
 			if(userGameLogsNotJoin.length == 0){
 				await db.insertGameLogJoin(message.author.id, message.guild.id, wordleNumber);
 				await db.insertGameLogStart(message.author.id, message.guild.id, wordleNumber);
-				msg.welcomeUser();
+				const customChannel = customChannelCache.get(message.guildId);
+				msg.welcomeUser(message.channel.name);
 				msg.firstGuessIntro(wordleNumber,message.guild.name);
 			}
 			else{
@@ -278,14 +301,15 @@ async function publishAnswer(winOrLoseStatus,wordleNumber,userState,guessColours
 	}
 	//look for appropriate channel to publish result
 	try {
-		let channel = Array.from(WordleBot.channels.cache.filter(e => (e.guildId == serverId) && (e.name == "wordle-bot")))[0][1];
+		const targetChannelId = customChannelCache.get(serverId);
+		const channel = Array.from(WordleBot.channels.cache.filter(e => (e.guildId == serverId) && (e.channelId == targetChannelId)))[0][1];
 		channel.send(messageString);
 		let serverName = await WordleBot.guilds.fetch(serverId);
-		WordleBot.users.fetch(userId).then((user) => user.send(`Your result has been published to server ${serverName}!`));
+		WordleBot.users.fetch(userId).then((user) => user.send(`Your result has been published to the ${channel.name} channel on server ${serverName}!`));
 	}
 	catch(err){
 		//no channel found
-		WordleBot.users.fetch(userId).then((user) => user.send("\"wordle-bot\" channel not found on server. Could not publish result. Please contact your server admin."))
+		WordleBot.users.fetch(userId).then((user) => user.send("\"wordle-bot\" channel not found on server. Could not publish result. Please contact your server admin and ask them to use the !summonserverwordle command in a new channel."))
 	} 
 }
 
@@ -436,4 +460,24 @@ async function metricsUpdate() {
 		users += uniqueUsers.length;
 	}
 	console.log(`Running on ${servers.length} servers with ${users} users. ${gamesPlayed.length} games completed.`);
+}
+
+async function buildCustomChannelCache() {
+	const customChannels = await db.qryCustomChannels();
+	for(const customChannelTableRow of customChannels) {
+		customChannelCache.set(customChannelTableRow.server, customChannelTableRow.custom_channel);
+	}
+	console.log("Built custom channel cache.");
+}
+
+async function updateCustomChannel(serverId, newChannelId){
+	db.updateCustomChannel(serverId, newChannelId);
+	customChannelCache.set(serverId, newChannelId);
+	try{
+	const channel = WordleBot.channels.cache.find(e => (e.guildId === serverId) && (e.channelId == newChannelId));
+	console.log("Update custom channel to channel "+channel.name+" "+newChannelId+" on server "+channel.guild.name+" "+serverId);
+	}
+	catch(e) {
+		console.log("Error updating custom channel to channel "+newChannelId+" on server "+serverId);
+	}
 }

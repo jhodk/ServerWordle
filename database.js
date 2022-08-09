@@ -88,6 +88,14 @@ async function qryCompletedGames() {
     return runMySQLQuery(`SELECT * FROM game_log WHERE (event_type = "WIN" OR event_type = "LOSE");`);
 }
 
+async function qryCustomChannels() {
+    return runMySQLQuery(`SELECT * FROM custom_channels;`);
+}
+
+async function qryServerCustomChannel(serverId) {
+    return runMySQLQuery(`SELECT * FROM custom_channels WHERE server = ${serverId}`);
+}
+
 //insert queries 
 
 async function insertAnswerRow(serverId, answer, wordleNumber) {
@@ -112,6 +120,11 @@ async function insertGameLogLose(userId, serverId, wordleNumber, difficulty) {
 
 async function insertGuessLog(userId, serverId, wordleNumber, guess, colours) {
     return runMySQLQuery(`INSERT INTO guess_log values(NULL,'${moment().format('YYYY-MM-DD HH:mm:ss')}','${serverId}','${userId}','${wordleNumber}','${guess}','${colours}');`);
+}
+
+async function updateCustomChannel(serverId, newChannelId) {
+    await runMySQLQuery(`DELETE FROM custom_channels WHERE server = ${serverId};`);
+    await runMySQLQuery(`INSERT INTO custom_channels values(NULL,'${moment().format('YYYY-MM-DD HH:mm:ss')}','${serverId}','${newChannelId}';`);
 }
 
 //private
@@ -142,12 +155,14 @@ module.exports = {
     qryUserGameLogsNotJoin,
     qryServerUniqueUsers,
     qryCompletedGames,
-    
+    qryCustomChannels,
+
+
     insertAnswerRow,
     insertGameLogJoin,
     insertGameLogStart,
     insertGameLogWin,
     insertGameLogLose,
     insertGuessLog,
-
+    updateCustomChannel,
 }

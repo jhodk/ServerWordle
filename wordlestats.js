@@ -8,7 +8,7 @@ WordleStats.prototype.handleRequest = async function (message) {
     const userServerGameRecords = await db.qryUserServerGameRecords(message.author.id, message.guildId);
 		if(userServerGameRecords.length == 0) {
 			console.log(message.author.username + " requested stats but was not yet a member on server "+message.guildId+" "+message.guild.name);
-			message.author.send("Send \"!join\" in the #wordle-bot text channel to play and record some stats!");
+			message.author.send("Send \"!join\" in the #"+message.channel.name+" channel to play and record some stats!");
 			return;
 		}
 		const userServerGamesStarted = await db.qryUserServerGamesStarted(message.author.id, message.guildId);
@@ -46,9 +46,7 @@ WordleStats.prototype.handleRequest = async function (message) {
 			userServerStatisticsMessage+="\n";
 		}
 		userServerStatisticsMessage+="```";
-		const WordleBot = this.WordleBot;
-		let channel = Array.from(WordleBot.channels.cache.filter(e => (e.guildId === message.guildId) && (e.name === "wordle-bot")))[0][1];
-		channel.send(userServerStatisticsMessage);
+		message.channel.send(userServerStatisticsMessage);
 }
 
 module.exports = {
