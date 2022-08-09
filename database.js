@@ -124,7 +124,7 @@ async function insertGuessLog(userId, serverId, wordleNumber, guess, colours) {
 
 async function updateCustomChannel(serverId, newChannelId) {
     await runMySQLQuery(`DELETE FROM custom_channels WHERE server = ${serverId};`);
-    await runMySQLQuery(`INSERT INTO custom_channels values(NULL,'${moment().format('YYYY-MM-DD HH:mm:ss')}','${serverId}','${newChannelId}';`);
+    await runMySQLQuery(`INSERT INTO custom_channels values(NULL,'${moment().format('YYYY-MM-DD HH:mm:ss')}','${serverId}','${newChannelId}');`);
 }
 
 //private

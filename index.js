@@ -86,8 +86,8 @@ WordleBot.on('messageCreate', async (message) => {
 			await updateCustomChannel(message.guildId, message.channelId);
 			const channel = message.channel;
 			try{
-			channel.send(`Hi, I'm ServerWordle. First type !join, then DM me each day to play wordle against everyone on your server. View your stats with !stats. Admins can change my channel with !summonserverwordle.`).then(msg => msg.pin());
-			}
+			channel.send(`Hi, I'm ServerWordle. First type !join, then DM me each day to play wordle against everyone on your server. View your stats with !stats. Admins can change my channel with !summonserverwordle.`).then(msg => msg.pin());		
+		}
 			catch(e){
 				console.log("Error sending welcome message and pin after !summonserverwordle for channel "+message.channel.name+" "+message.channelId+" on server "+message.guild.name+ " "+message.guildId);
 			}
@@ -97,7 +97,7 @@ WordleBot.on('messageCreate', async (message) => {
 		}
 	}
 
-	const targetChannelId = "-1";
+	let targetChannelId = "-1";
 	if(message.channel.type != 'DM' && !message.author.bot){
 		targetChannelId = customChannelCache.get(message.guildId);
 	}
@@ -122,12 +122,6 @@ WordleBot.on('messageCreate', async (message) => {
 			}
 			const serverLatestAnswer = await db.qryServerLatestAnswer(message.guildId);
 			const wordleNumber = serverLatestAnswer[0].wordle_number;
-			
-			//todo  if not finished current game, only send a short message to not interrupt. Don't add start event.
-			//if latest game log not join is START
-			//	add join event
-			//	send message saying current game in progress
-
 			const userGameLogsNotJoin = await db.qryUserGameLogsNotJoin(message.author.id);
 			if(userGameLogsNotJoin.length == 0){
 				await db.insertGameLogJoin(message.author.id, message.guild.id, wordleNumber);
@@ -148,8 +142,7 @@ WordleBot.on('messageCreate', async (message) => {
 					await db.insertGameLogStart(message.author.id, message.guild.id, wordleNumber);
 					msg.firstGuessIntro(wordleNumber,message.guild.name);
 				}
-			}
-					
+			}		
 			return;
 		}
 	}
@@ -302,7 +295,7 @@ async function publishAnswer(winOrLoseStatus,wordleNumber,userState,guessColours
 	//look for appropriate channel to publish result
 	try {
 		const targetChannelId = customChannelCache.get(serverId);
-		const channel = Array.from(WordleBot.channels.cache.filter(e => (e.guildId == serverId) && (e.channelId == targetChannelId)))[0][1];
+		const channel = await WordleBot.channels.fetch(targetChannelId);
 		channel.send(messageString);
 		let serverName = await WordleBot.guilds.fetch(serverId);
 		WordleBot.users.fetch(userId).then((user) => user.send(`Your result has been published to the ${channel.name} channel on server ${serverName}!`));
@@ -474,10 +467,10 @@ async function updateCustomChannel(serverId, newChannelId){
 	db.updateCustomChannel(serverId, newChannelId);
 	customChannelCache.set(serverId, newChannelId);
 	try{
-	const channel = WordleBot.channels.cache.find(e => (e.guildId === serverId) && (e.channelId == newChannelId));
+	const channel = await WordleBot.channels.fetch(newChannelId);
 	console.log("Update custom channel to channel "+channel.name+" "+newChannelId+" on server "+channel.guild.name+" "+serverId);
 	}
 	catch(e) {
-		console.log("Error updating custom channel to channel "+newChannelId+" on server "+serverId);
+		console.log("Error updating custom channel to channel "+newChannelId+" on server "+serverId+"\n"+e);
 	}
 }
