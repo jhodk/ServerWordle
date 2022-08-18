@@ -1,4 +1,4 @@
-# ServerWordle
+<h1 align="center">ServerWordle</h1>
 
 <p align="center">
 		<a href="https://discord.com/api/oauth2/authorize?client_id=940265535650799647&permissions=11280&scope=bot"><img alt="Servers" src="https://img.shields.io/badge/dynamic/json.svg?style=for-the-badge&label=Servers&url=https://jhodk.com/stats/wordlestats.json&query=$.servers&colorB=blue"></a>
