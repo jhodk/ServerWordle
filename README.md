@@ -1,7 +1,7 @@
 # ServerWordle
 
 <p align="center">
-		<a href="https://discord.com/api/oauth2/authorize?client_id=940265535650799647&permissions=11280&scope=bot><img alt="Servers" src="https://img.shields.io/badge/dynamic/json.svg?style=for-the-badge&label=Servers&url=https://jhodk.com/stats/wordlestats.json&query=$.servers&colorB=blue"></a>
+		<a href="https://discord.com/api/oauth2/authorize?client_id=940265535650799647&permissions=11280&scope=bot"><img alt="Servers" src="https://img.shields.io/badge/dynamic/json.svg?style=for-the-badge&label=Servers&url=https://jhodk.com/stats/wordlestats.json&query=$.servers&colorB=blue"></a>
 		<a href="https://discord.com/api/oauth2/authorize?client_id=940265535650799647&permissions=11280&scope=bot"><img alt="Users" src="https://img.shields.io/badge/dynamic/json.svg?style=for-the-badge&label=Users&url=https://jhodk.com/stats/wordlestats.json&query=$.users&colorB=green"></a>
 			<a href="https://discord.com/api/oauth2/authorize?client_id=940265535650799647&permissions=11280&scope=bot"><img alt="Wordles Completed" src="https://img.shields.io/badge/dynamic/json.svg?style=for-the-badge&label=Wordles%20completed&url=https://jhodk.com/stats/wordlestats.json&query=$.wordlesAnswered&colorB=orange"></a>
 </p>
