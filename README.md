@@ -1,4 +1,11 @@
 # ServerWordle
+
+<p align="center">
+		<img alt="Servers" src="https://img.shields.io/badge/dynamic/json.svg?style=for-the-badge&label=Servers&url=https://jhodk.com/stats/wordlestats.json&query=$.servers&colorB=#4c1">
+		<img alt="Users" src="https://img.shields.io/badge/dynamic/json.svg?style=for-the-badge&label=Users&url=https://jhodk.com/stats/wordlestats.json&query=$.users&colorB=#4c1">
+			<img alt="Wordles Completed" src="https://img.shields.io/badge/dynamic/json.svg?style=for-the-badge&label=Wordles%20completed&url=https://jhodk.com/stats/wordlestats.json&query=$.wordlesAnswered&colorB=#4c1">
+</p>
+
 Discord bot that you can play Wordle with via DMs and the result gets posted to your server!
 Built using node.js and discord.js package.
 
