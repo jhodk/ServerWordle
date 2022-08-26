@@ -15,7 +15,7 @@ If you're a server admin then you can [invite the ServerWordle bot](https://disc
 
 Once you have added the bot it will create a "wordle-bot" text channel and pin a help message to it. Use !summonserverwordle in another channel if you prefer the bot to post there instead.
 
-Or you can join the test server by clicking [this link](https://discord.gg/bDthXD6Yu3)!
+Or you can join the test server by clicking [this link](https://discord.gg/S3unGSUXgw)!
 
 <img width="588" alt="Screenshot 2022-04-01 at 15 14 43" src="https://user-images.githubusercontent.com/7433327/161281462-af122c6b-0dfb-4259-a138-2d4beaab374d.png">
 <img width="281" alt="Screenshot 2022-04-01 at 15 18 24" src="https://user-images.githubusercontent.com/7433327/161282141-7beaeccf-8a4e-4ceb-a241-50992b94eeff.png">
