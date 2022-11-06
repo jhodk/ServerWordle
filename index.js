@@ -41,6 +41,10 @@ db.connect(async  err => {
 	console.log("done executing bot login");
 	refreshAnswers();
 	setInterval(refreshAnswers, 1000 * 60 * 1);
+	dailyReminder();
+	setInterval(dailyReminder, 1000 * 60 * 1);
+	// weeklyLeaderboard();
+	// setInterval(weeklyLeaderboard, 1000 * 60 * 1);
 	//aliveStatus();
 	//setInterval(aliveStatus, 1000 * 60 * 60);
 	metricsUpdate();
@@ -53,6 +57,9 @@ async function test() {
 
 const {WordleStats} = require("./wordlestats.js");
 const Stats = new WordleStats(db, WordleBot);
+
+// const {WeeklyLeaderboard} = require("./leaderboard.js");
+// const Leaderboard = new WeeklyLeaderboard(db, WordleBot);
 
 const {Messages} = require("./messages.js");
 
@@ -389,6 +396,67 @@ async function refreshAnswers() {	//get list of latest wordle entries for each s
 			await db.insertAnswerRow(allServersLatestAnswers[i].server,newWordle,(allServersLatestAnswers[i].wordle_number+1));
 		}
 	}
+}
+
+async function doesUserHaveNewGame(userId) {
+	const userServersJoined = await db.qryUserServersJoined(userId);
+	for(let serverRow of userServersJoined) {
+		const newGameFound = await queryNewGameForUserServer(userId,serverRow.server);
+		if(newGameFound){ 
+			return true;
+		}
+	}
+	return false;
+}
+
+async function hasUserPlayedRecently(userId) {
+	const userGameLogsNotJoin = await db.qryUserGameLogsNotJoin(userId);
+	if(userGameLogsNotJoin.length == 0) {
+		return false;
+	}
+	const lastTime = moment(userGameLogsNotJoin[userGameLogsNotJoin.length-1].date);
+	return !(moment().diff(lastTime, 'days') > 7);
+}
+
+async function dailyReminder() {
+	const nextScheduledTime = await db.getScheduledMessageLastTime("daily reminder");
+	if(moment().diff(nextScheduledTime) > 0) {
+		const reminderStrings = [
+			"🌅 Good morning! It's time for ServerWordle! 🔠",
+			"😎 Wake the 💥 up samurai... 🙂🕶👌 we have a ServerWordle to do.",
+			"Don't forget to do your ServerWordle! 🔫🦉",
+			"Would it be ok if we played ServerWordle together? 👉👈 Nah you're right, it would be weird... unless? 😳",
+			"It's wordlin' time! ⌚",
+			"I'm thinking of a 5-letter word... 🧠",
+			"I'm thinking of a 5-letter word... it's not crane. 🏗 Or is it? 🤔",
+			"Have you done your ServerWordle? 📚",
+			"Have you done today's ServerWordle? 📅",
+			"Hey - it's ServerWordle time! ⏰",
+			"⚠🚨 New ServerWordle dropped! 🚨⚠",
+			"Let's play ServerWordle! 🚀",
+			"There is 1 wordle among us ඞ",
+			"Think of a word, any word... ✨"
+		];
+		const greeting = reminderStrings[Math.floor(Math.random()*reminderStrings.length)];
+		const users = await db.qryAllUniqueUsers();
+		for(let userRow of users) {
+			const newGameAvailable = await doesUserHaveNewGame(userRow.user);
+			const isRecentPlayer = await hasUserPlayedRecently(userRow.user);
+			if(newGameAvailable && isRecentPlayer) {
+				WordleBot.users.fetch(userRow.user).then((user) => user.send(greeting));
+			}
+		}
+		const updatedTime = nextScheduledTime.add(1, 'days').format('YYYY-MM-DD HH:mm:ss');
+		await db.updateScheduledMessageLastTime("daily reminder", updatedTime);
+	}
+}
+
+async function weeklyLeaderboard() {
+	// TODO
+	// const servers = await db.qryServersWithAnswers();
+	// for(let serverRow of servers) {
+	
+	// }
 }
 
 function getDifficulty(guesses,colours,wordle) {	

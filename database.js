@@ -87,6 +87,10 @@ async function qryServerUniqueUsers(serverId) {
     return runMySQLQuery(`SELECT DISTINCT user FROM game_log WHERE server = ${serverId};`);
 }
 
+async function qryAllUniqueUsers() {
+    return runMySQLQuery(`SELECT DISTINCT user FROM game_log;`);
+}
+
 async function qryCompletedGames() {
     return runMySQLQuery(`SELECT * FROM game_log WHERE (event_type = "WIN" OR event_type = "LOSE");`);
 }
@@ -130,6 +134,15 @@ async function updateCustomChannel(serverId, newChannelId) {
     await runMySQLQuery(`INSERT INTO custom_channels values(NULL,'${moment().format('YYYY-MM-DD HH:mm:ss')}','${serverId}','${newChannelId}');`);
 }
 
+async function getScheduledMessageLastTime(type) {
+    return runMySQLQuery(`SELECT * FROM scheduled_messages WHERE message_type = '${type}';`);
+}
+
+async function updateScheduledMessageLastTime(type, nextTime) {
+    await runMySQLQuery(`DELETE FROM scheduled_messages WHERE message_type = '${type}';`);
+    await runMySQLQuery(`INSERT INTO scheduled_messages values(NULL,'${nextTime}','${type}');`);
+}
+
 //private
 
 async function insertGameLogGeneric(userId, serverId, wordleNumber, eventType, numGuesses="NULL", difficulty="NULL", streak="NULL") {
@@ -157,8 +170,10 @@ module.exports = {
     qryServerLastNAnswers,
     qryUserGameLogsNotJoin,
     qryServerUniqueUsers,
+    qryAllUniqueUsers,
     qryCompletedGames,
     qryCustomChannels,
+    getScheduledMessageLastTime,
 
 
     insertAnswerRow,
@@ -168,4 +183,5 @@ module.exports = {
     insertGameLogLose,
     insertGuessLog,
     updateCustomChannel,
+    updateScheduledMessageLastTime,
 }
