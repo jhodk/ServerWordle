@@ -30,8 +30,12 @@ Messages.prototype.unregisteredUser = function() {
 
 Messages.prototype.completedAllWordles = function() {
     const timeUntilMidnight = moment(moment().format('YYYY-MM-DD') + ' 23:59:59').fromNow();
-    this.message.author.send("You're all caught up! Message me again after 0am UTC ("+timeUntilMidnight+") to try your next ServerWordle!");
-					
+    this.message.author.send("You're all caught up! Message me again after 0am UTC ("+timeUntilMidnight+") to try your next ServerWordle!");				
+}
+
+Messages.prototype.nextWordleTime = function() {
+    const timeUntilMidnight = moment(moment().format('YYYY-MM-DD') + ' 23:59:59').fromNow();
+    this.message.author.send("Message me again after 0am UTC ("+timeUntilMidnight+") to try your next ServerWordle!");				
 }
 
 Messages.prototype.gameLogError = function() {
@@ -59,7 +63,7 @@ Messages.prototype.lostGame = function(wordleNumber, wordleAnswer) {
 }
 
 Messages.prototype.promptCheckNewGames = function() {
-    this.message.author.send("Send me a message to check for a new wordle.");
+    this.message.author.send("Wait! ✋ You have more ServerWordles to complete! Send me a message and I'll find the next game for you. 🕵️‍♂️");
 }
 
 Messages.prototype.remainingLetters = function(letters) {

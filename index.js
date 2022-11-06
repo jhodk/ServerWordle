@@ -179,17 +179,19 @@ async function handleGame(message) {
 	}
 }
 
-async function tryCreateNewGame(message) {
+async function tryCreateNewGame(message, execute=true) {
 	const userServersJoined = await db.qryUserServersJoined(message.author.id);
 	for(let serverRow of userServersJoined) {
 		const newGameFound = await queryNewGameForUserServer(message.author.id,serverRow.server);
 		if(newGameFound){ 
-			const answerRow = await db.qryServerLatestAnswer(serverRow.server);
-			const wordleNumber = answerRow[answerRow.length-1].wordle_number;
-			db.insertGameLogStart(message.author.id, serverRow.server, wordleNumber)
-			const serverName = await WordleBot.guilds.fetch(serverRow.server);
-			const msg = new Messages(message);
-			msg.firstGuessIntro(wordleNumber, serverName);
+			if(execute==true) {
+				const answerRow = await db.qryServerLatestAnswer(serverRow.server);
+				const wordleNumber = answerRow[answerRow.length-1].wordle_number;
+				db.insertGameLogStart(message.author.id, serverRow.server, wordleNumber)
+				const serverName = await WordleBot.guilds.fetch(serverRow.server);
+				const msg = new Messages(message);
+				msg.firstGuessIntro(wordleNumber, serverName);
+			}
 			return true;
 		}
 	}
@@ -262,14 +264,27 @@ async function sendFrontendResponse(message, serverId, wordleNumber, userState, 
 		const streak = await calcStreakOnWin(message.author.id, serverId, wordleNumber);
 		await db.insertGameLogWin(message.author.id,serverId,wordleNumber,userState,difficulty,streak);
 		await publishAnswer("WIN",wordleNumber,userState,guessColours,difficulty,message.author.id,serverId);
-		msg.promptCheckNewGames();
+		const hasNewGame = tryCreateNewGame(message, false);
+		if(hasNewGame) {
+			msg.promptCheckNewGames();
+		}
+		else {
+			msg.nextWordleTime();
+		}
 	}
 	else if(userState == UserStates.Guess6) {
 		msg.lostGame(wordleNumber, wordleAnswer);
 		const difficulty = getDifficulty(userGuesses,guessColours,wordleAnswer);
 		await db.insertGameLogLose(message.author.id, serverId, wordleNumber, difficulty);
 		await publishAnswer("LOSE",wordleNumber,userState,guessColours,difficulty,message.author.id,serverId);
-		msg.promptCheckNewGames();					
+		const hasNewGame = tryCreateNewGame(message, false);
+		if(hasNewGame) {
+			msg.promptCheckNewGames();
+		}
+		else {
+			msg.nextWordleTime();
+		}	
+
 	}
 	else{
 		let lettersRemaining = getRemainingLetters(userGuesses,wordleAnswer);
