@@ -150,11 +150,6 @@ WordleBot.on('messageCreate', async (message) => {
 	}
 	//on received DM
 	if(message.channel.type == 'DM' && !message.author.bot) {
-		/*if(message.author.id == "77749567478566912"){
-			const testemoji = await getStreakEmoji(12);
-			console.log("test emoji"+testemoji);
-			message.author.send(testemoji+"test emoji");
-		}*/
 		const msg = new Messages(message);
 		const userGameLogs = await db.qryUserGameLogs(message.author.id);
 		if(userGameLogs.length == 0) {
