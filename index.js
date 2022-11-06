@@ -10,6 +10,7 @@ const util = require('util');
 const config = require('./config.json');
 const words = require('./words.json');
 const moment = require('moment');
+const fetch = require('node-fetch');
 const GuessList = words.guesslist.concat(words.answerlist);
 const AnswerList = words.answerlist;
 const UserStates = {
@@ -29,6 +30,7 @@ const WordleBot = new Client({
 			Intents.FLAGS.DIRECT_MESSAGE_TYPING],
 	partials:['CHANNEL']
 });
+
 db.connect(async  err => {
     if (err) return console.log(err);
     console.log(`MySQL has been connected!`);
@@ -42,7 +44,7 @@ db.connect(async  err => {
 	//aliveStatus();
 	//setInterval(aliveStatus, 1000 * 60 * 60);
 	metricsUpdate();
-	setInterval(metricsUpdate, 1000 * 60 * 60);
+	setInterval(metricsUpdate, 1000 * 60 * 10);
 });
 
 async function test() {
@@ -66,9 +68,9 @@ WordleBot.on("guildCreate", async guild => {
 			channel = WordleBot.channels.cache.find(e => (e.guildId === guild.id) && (e.name === "wordle-bot"));
 		}
 		await updateCustomChannel(guild.id,channel.id);
-		channel.send(`Hi, I'm ServerWordle. First type !join, then DM me each day to play wordle against everyone on your server. View your stats with !stats. Admins can change my channel with !summonserverwordle.`).then(msg => msg.pin());
+		channel.send(`Hi, I'm ServerWordle. First type **!join**, then DM me each day to play wordle against everyone on your server. View your stats with **!stats**. Admins can change my channel with **!summonserverwordle.**`).then(msg => msg.pin());
 		const owner = await guild.fetchOwner();
-		owner.send(`Thanks for inviting ServerWordle! I've set up a wordle-bot text channel in your server. Head over there to get started! If you want to use another channel for the bot, type !summonserverwordle in the desired channel.`);
+		owner.send(`Thanks for inviting ServerWordle! I've set up a wordle-bot text channel in your server. Head over there and type **!join** to get started! If you want to use another channel for the bot, type **!summonserverwordle** in the desired channel.`);
 		console.log(`New guild joined: ${guild.name} (id: ${guild.id}). This guild has ${guild.memberCount} members!`);
 	}
 	catch(e){
@@ -86,7 +88,7 @@ WordleBot.on('messageCreate', async (message) => {
 			await updateCustomChannel(message.guildId, message.channelId);
 			const channel = message.channel;
 			try{
-			channel.send(`Hi, I'm ServerWordle. First type !join, then DM me each day to play wordle against everyone on your server. View your stats with !stats. Admins can change my channel with !summonserverwordle.`).then(msg => msg.pin());		
+			channel.send(`Hi, I'm ServerWordle. First type **!join**, then DM me each day to play wordle against everyone on your server. View your stats with **!stats**. Admins can change my channel with **!summonserverwordle**.`).then(msg => msg.pin());		
 		}
 			catch(e){
 				console.log("Error sending welcome message and pin after !summonserverwordle for channel "+message.channel.name+" "+message.channelId+" on server "+message.guild.name+ " "+message.guildId);
@@ -148,6 +150,11 @@ WordleBot.on('messageCreate', async (message) => {
 	}
 	//on received DM
 	if(message.channel.type == 'DM' && !message.author.bot) {
+		/*if(message.author.id == "77749567478566912"){
+			const testemoji = await getStreakEmoji(12);
+			console.log("test emoji"+testemoji);
+			message.author.send(testemoji+"test emoji");
+		}*/
 		const msg = new Messages(message);
 		const userGameLogs = await db.qryUserGameLogs(message.author.id);
 		if(userGameLogs.length == 0) {
@@ -283,7 +290,8 @@ async function publishAnswer(winOrLoseStatus,wordleNumber,userState,guessColours
 	messageString += "\n<@" + userId + ">";
 	let streak = await db.qryUserServerCurrentWinStreak(userId, serverId);
 	if(streak[0].streak >= 3) {
-		messageString += " - "+streak[0].streak+" win streak!";
+		const emoji = await getStreakEmoji(streak[0].streak);
+		messageString += " - "+streak[0].streak+" win streak! " + emoji;
 	}
 	let colourMap = new Map([["B", "⬜"],["Y", "🟦"],["G", "🟩"]]);
 	for(let i = 0; i < guessColours.length; i++) {
@@ -292,6 +300,7 @@ async function publishAnswer(winOrLoseStatus,wordleNumber,userState,guessColours
 			messageString += colourMap.get(guessColours[i].split("")[j]);
 		}
 	}
+	messageString += "\n";
 	//look for appropriate channel to publish result
 	try {
 		const targetChannelId = customChannelCache.get(serverId);
@@ -302,8 +311,53 @@ async function publishAnswer(winOrLoseStatus,wordleNumber,userState,guessColours
 	}
 	catch(err){
 		//no channel found
-		WordleBot.users.fetch(userId).then((user) => user.send("\"wordle-bot\" channel not found on server. Could not publish result. Please contact your server admin and ask them to use the !summonserverwordle command in a new channel."))
+		WordleBot.users.fetch(userId).then((user) => user.send("\"wordle-bot\" channel not found on server. Could not publish result. Please contact your server admin and ask them to use the **!summonserverwordle** command in a new channel."))
 	} 
+}
+
+async function getStreakEmoji(num) {
+	if(num < 3){
+		return "";
+	}
+	//const streakEmojis = "🎈👏🔥💪🥳🎓🙌👀🎺👑💃😏🔮💎🙀🧁🍾🏆😳📯🚀🌞📈🎂🥂🤠🧠✨";
+	const streakEmojis = [
+		"\:balloon:",
+		"\:clap:",
+		"\:fire:",
+		"\:muscle:",
+		"\:partying_face:",
+		"\:mortar_board:",
+		"\:raised_hands:",
+		"\:eyes:",
+		"\:trumpet:",
+		"\:crown:",
+		"\:dancer:",
+		"\:smirk:",
+		"\:crystal_ball:",
+		"\:gem:",
+		"\:scream_cat:",
+		"\:cupcake:",
+		"\:champagne:",
+		"\:trophy:",
+		"\:flushed:",
+		"\:postal_horn:",
+		"\:rocket:",
+		"\:sun_with_face:",
+		"\:chart_with_upwards_trend:",
+		"\:birthday:",
+		"\:champagne_glass:",
+		"\:cowboy:",
+		"\:brain:",
+		"\:sparkles:"
+	];
+	if(num > streakEmojis.length+2) {
+		//console.log("adding prestige");
+		return "\:moyai:"+ await getStreakEmoji(num-streakEmojis.length);
+	}
+	else {
+		//console.log(streakEmojis[num-3],"added");
+		return streakEmojis[num-3];
+	}
 }
 
 async function aliveStatus(){
@@ -452,7 +506,21 @@ async function metricsUpdate() {
 		const uniqueUsers = await db.qryServerUniqueUsers(serverRow.server);
 		users += uniqueUsers.length;
 	}
-	console.log(`Running on ${servers.length} servers with ${users} users. ${gamesPlayed.length} games completed.`);
+
+	let data = {
+		users: users,
+		servers: servers.length,
+		wordlesAnswered: gamesPlayed.length,
+		secret: config.secret
+	};
+
+	fetch(config.APIEndpoint, {
+		method:"POST",
+		body: JSON.stringify(data),
+		headers: {"Content-Type": "application/json"}
+	}).catch(err => console.log(err));
+
+	//console.log(`Running on ${servers.length} servers with ${users} users. ${gamesPlayed.length} games completed.`);
 }
 
 async function buildCustomChannelCache() {
