@@ -16,7 +16,7 @@ Messages.prototype.welcomeUser = function(channelName) {
                         +"\n    🟦 : This letter appears in my word but not in this position."
                         +"\n    ⬜ : This letter doesn't appear in my word. Try another!"
                         +"\nAdvanced: your attempt will be marked as hard (*) if you always use any green and blue hints in subsequent guesses."
-                        +"\nView stats by sending !stats in the #"+channelName+" channel of your server. Contact <@959962942718242868> with any questions."
+                        +"\nView stats by sending **!stats** in the #"+channelName+" channel of your server. Contact <@959962942718242868> with any questions."
                         +"\n\nLet's play!");
 }
 
@@ -25,7 +25,7 @@ Messages.prototype.firstGuessIntro = function(wordleNumber, serverName) {
 }
 
 Messages.prototype.unregisteredUser = function() {
-    this.message.author.send("Hey <@"+this.message.author.id+"> - great to meet you!\nPlease send \"!join\" in the #wordle-bot channel of your server and I'll set up a game for you 🤓.\nNote: your server admin may have changed which channel I live in, so ask them for help if you can't find #wordle-bot!");
+    this.message.author.send("Hey <@"+this.message.author.id+"> - great to meet you!\nPlease send **!join** in the #wordle-bot channel of your server and I'll set up a game for you 🤓.\nNote: your server admin may have changed which channel I live in, so ask them for help if you can't locate the channel!");
 }
 
 Messages.prototype.completedAllWordles = function() {
