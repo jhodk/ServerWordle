@@ -28,7 +28,7 @@ const WordleBot = new Client({
 	intents:[Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES, 
 			Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.DIRECT_MESSAGE_REACTIONS, 
 			Intents.FLAGS.DIRECT_MESSAGE_TYPING],
-	partials:['CHANNEL']
+	partials:['CHANNEL', 'REACTION', 'MESSAGE']
 });
 
 db.connect(async  err => {
@@ -41,10 +41,6 @@ db.connect(async  err => {
 	console.log("done executing bot login");
 	refreshAnswers();
 	setInterval(refreshAnswers, 1000 * 60 * 1);
-	dailyReminder();
-	setInterval(dailyReminder, 1000 * 60 * 1);
-	// weeklyLeaderboard();
-	// setInterval(weeklyLeaderboard, 1000 * 60 * 1);
 	//aliveStatus();
 	//setInterval(aliveStatus, 1000 * 60 * 60);
 	metricsUpdate();
@@ -65,6 +61,10 @@ const {Messages} = require("./messages.js");
 
 WordleBot.on('ready', () => {
 	console.log(`Bot ${WordleBot.user.tag} is logged in!`);
+	dailyReminder();
+	setInterval(dailyReminder, 1000 * 60 * 1);
+	// weeklyLeaderboard();
+	// setInterval(weeklyLeaderboard, 1000 * 60 * 1);
 });
 
 WordleBot.on("guildCreate", async guild => {
@@ -271,7 +271,7 @@ async function sendFrontendResponse(message, serverId, wordleNumber, userState, 
 		const streak = await calcStreakOnWin(message.author.id, serverId, wordleNumber);
 		await db.insertGameLogWin(message.author.id,serverId,wordleNumber,userState,difficulty,streak);
 		await publishAnswer("WIN",wordleNumber,userState,guessColours,difficulty,message.author.id,serverId);
-		const hasNewGame = tryCreateNewGame(message, false);
+		const hasNewGame = await tryCreateNewGame(message, false);
 		if(hasNewGame) {
 			msg.promptCheckNewGames();
 		}
@@ -284,7 +284,7 @@ async function sendFrontendResponse(message, serverId, wordleNumber, userState, 
 		const difficulty = getDifficulty(userGuesses,guessColours,wordleAnswer);
 		await db.insertGameLogLose(message.author.id, serverId, wordleNumber, difficulty);
 		await publishAnswer("LOSE",wordleNumber,userState,guessColours,difficulty,message.author.id,serverId);
-		const hasNewGame = tryCreateNewGame(message, false);
+		const hasNewGame = await tryCreateNewGame(message, false);
 		if(hasNewGame) {
 			msg.promptCheckNewGames();
 		}
@@ -419,8 +419,16 @@ async function hasUserPlayedRecently(userId) {
 }
 
 async function dailyReminder() {
-	const nextScheduledTime = await db.getScheduledMessageLastTime("daily reminder");
+	let nextScheduledTime = await db.getScheduledMessageLastTime("daily reminder");
+	if(nextScheduledTime.length > 0) {
+		nextScheduledTime = nextScheduledTime[0].date;
+	}
 	if(moment().diff(nextScheduledTime) > 0) {
+
+		const updatedTime = moment(nextScheduledTime).add(1, 'days').format('YYYY-MM-DD HH:mm:ss');
+		await db.updateScheduledMessageLastTime("daily reminder", updatedTime);
+
+		console.log("Sending daily reminders");
 		const reminderStrings = [
 			"🌅 Good morning! It's time for ServerWordle! 🔠",
 			"😎 Wake the 💥 up samurai... 🙂🕶👌 we have a ServerWordle to do.",
@@ -443,11 +451,19 @@ async function dailyReminder() {
 			const newGameAvailable = await doesUserHaveNewGame(userRow.user);
 			const isRecentPlayer = await hasUserPlayedRecently(userRow.user);
 			if(newGameAvailable && isRecentPlayer) {
-				WordleBot.users.fetch(userRow.user).then((user) => user.send(greeting));
+				console.log(userRow);
+				const user = await WordleBot.users.fetch(userRow.user);
+				try {
+					user.send(greeting);
+					console.log("sent reminder to "+user.username);
+				}
+				catch (e) {
+					console.log(e);
+					console.log("error sending reminder to "+user.username);
+				}
 			}
 		}
-		const updatedTime = nextScheduledTime.add(1, 'days').format('YYYY-MM-DD HH:mm:ss');
-		await db.updateScheduledMessageLastTime("daily reminder", updatedTime);
+
 	}
 }
 
