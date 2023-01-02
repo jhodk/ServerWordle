@@ -171,6 +171,71 @@ WordleBot.on('messageCreate', async (message) => {
 	}
 });
 
+// WordleBot.on('messageCreate', async (message) => {
+//   if (!message.author.bot && message.channel.type === 'DM') {
+//     const msg = await message.author.send("Hello!");
+//     await msg.react("🍎");
+//     await msg.react("🍌");
+//   }
+// })
+
+WordleBot.on('messageReactionAdd', async (reaction, user) => {
+	if(reaction.partial) {
+		await reaction.fetch();
+	}
+  if(reaction.message.author.bot && !user.bot && reaction.message.channel.type === 'DM') {
+		const msg = new Messages(undefined, user);
+		const userGameLogs = await db.qryUserGameLogs(user.id);
+		if(userGameLogs.length == 0) {
+			msg.unregisteredUser();
+			return;
+		}
+		else {
+			const serverSelectEmojis = ["🍎", "🍌", "🥕", "🍩", "🍆"];
+			const selectedServerIndex = serverSelectEmojis.indexOf(reaction.emoji.name);
+			const userServersJoined = await db.qryUserServersJoined(user.id);			//get list of servers
+			if(selectedServerIndex === -1 || selectedServerIndex >= userServersJoined.length || userServersJoined.length === 0) {
+				return;
+			}
+			else {
+				await tryCreateNewGameFromReaction(user.id, userServersJoined[selectedServerIndex].server);
+			}
+		}
+  }
+})
+
+async function getServerNamesForUser(user) {
+	let userServersJoined = await db.qryUserServersJoined(user.id);
+	userServersJoined = userServersJoined.slice(0, 5);
+	let serverNames = [];
+	for(const [i, serverRow] of userServersJoined.entries()) {
+		let serverName = await WordleBot.guilds.fetch(serverId);
+		serverNames.push(`${serverName}`); 
+	}
+}
+
+async function tryCreateNewGameFromReaction(userID, serverID) {
+	const userGameLogsNotJoin = await db.qryUserGameLogsNotJoin(userID);
+	const latestGameLogNotJoin = userGameLogsNotJoin[userGameLogsNotJoin.length-1];
+	if(latestGameLogNotJoin.event_type == "START") { //user is already in game
+	}
+	else {
+		const newGameAvailable = await queryNewGameForUserServer(userID, serverID);
+		const user = await WordleBot.users.fetch(userID);
+		const msg = new Messages(undefined, user);
+		const serverName = await WordleBot.guilds.fetch(serverID);
+		if(newGameAvailable) {
+			const answerRow = await db.qryServerLatestAnswer(serverID);
+			const wordleNumber = answerRow[answerRow.length-1].wordle_number;
+			db.insertGameLogStart(userID, serverID, wordleNumber)
+			msg.firstGuessIntro(wordleNumber, serverName);
+		}
+		else {
+			msg.upToDateOnServer(serverName);
+		}
+	}
+}
+
 async function handleGame(message) {
 	const userGameLogsNotJoin = await db.qryUserGameLogsNotJoin(message.author.id);
 	const latestGameLogNotJoin = userGameLogsNotJoin[userGameLogsNotJoin.length-1];
@@ -274,9 +339,11 @@ async function sendFrontendResponse(message, serverId, wordleNumber, userState, 
 		const hasNewGame = await tryCreateNewGame(message, false);
 		if(hasNewGame) {
 			msg.promptCheckNewGames();
+			msg.serverListWithReacts(await getServerNamesForUser(message.author));
 		}
 		else {
 			msg.nextWordleTime();
+			msg.serverListWithReacts(await getServerNamesForUser(message.author));
 		}
 	}
 	else if(userState == UserStates.Guess6) {
@@ -287,9 +354,11 @@ async function sendFrontendResponse(message, serverId, wordleNumber, userState, 
 		const hasNewGame = await tryCreateNewGame(message, false);
 		if(hasNewGame) {
 			msg.promptCheckNewGames();
+			msg.serverListWithReacts(await getServerNamesForUser(message.author));
 		}
 		else {
 			msg.nextWordleTime();
+			msg.serverListWithReacts(await getServerNamesForUser(message.author));
 		}	
 
 	}

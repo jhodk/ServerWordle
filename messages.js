@@ -1,8 +1,14 @@
 const { Message } = require('discord.js');
 const moment = require('moment');
 
-function Messages(message) {
+function Messages(message = undefined, user = undefined) {
     this.message = message;
+    if(!user) {
+        this.user = this.message.author;
+    }
+    else {
+        this.user = user;
+    }
 }
 
 Messages.prototype.userAlreadyJoinedServer = function() {
@@ -21,11 +27,15 @@ Messages.prototype.welcomeUser = function(channelName) {
 }
 
 Messages.prototype.firstGuessIntro = function(wordleNumber, serverName) {
-    this.message.author.send(`\nServerWordle #${wordleNumber} for server ${serverName}. Send me your first guess...\n`);
+    this.user.send(`\nServerWordle #${wordleNumber} for server ${serverName}. Send me your first guess...\n`);
+}
+
+Messages.prototype.upToDateOnServer = function(serverName) {
+    this.user.send(`You are up to date on this server! (${serverName})`);
 }
 
 Messages.prototype.unregisteredUser = function() {
-    this.message.author.send("Hey <@"+this.message.author.id+"> - great to meet you!\nPlease send **!join** in the #wordle-bot channel of your server and I'll set up a game for you 🤓.\nNote: your server admin may have changed which channel I live in, so ask them for help if you can't locate the channel!");
+    this.user.send("Hey <@"+this.user.id+"> - great to meet you!\nPlease send **!join** in the #wordle-bot channel of your server and I'll set up a game for you 🤓.\nNote: your server admin may have changed which channel I live in, so ask them for help if you can't locate the channel!");
 }
 
 Messages.prototype.completedAllWordles = function() {
@@ -63,7 +73,23 @@ Messages.prototype.lostGame = function(wordleNumber, wordleAnswer) {
 }
 
 Messages.prototype.promptCheckNewGames = function() {
-    this.message.author.send("Wait! ✋ You have more ServerWordles to complete! Send me a message and I'll find the next game for you. 🕵️‍♂️");
+    this.message.author.send("Wait! ✋ You have more ServerWordles to complete! Choose the server with a reaction, or send me a message and I'll find the next game for you. 🕵️‍♂️");
+}
+
+Messages.prototype.serverListWithReacts = async function(serverNames) {
+    if(serverNames.length === 0) {
+        return;
+    }
+    const serverSelectEmojis = ["🍎", "🍌", "🥕", "🍩", "🍆"];
+    let messageText = "**React to play ServerWordle!**";
+    serverNames = serverNames.slice(0,5);
+    for(const [i, name] of serverNames) {
+        messageText += `\n${serverSelectEmojis[i]} ${name}`;
+    }
+    let sentMessage = await this.user.send(messageText);
+    for(const [i, name] of serverNames) {
+        sentMessage.react(serverSelectEmojis[i]);
+    }
 }
 
 Messages.prototype.remainingLetters = function(letters) {
