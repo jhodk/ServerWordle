@@ -83,11 +83,11 @@ Messages.prototype.serverListWithReacts = async function(serverNames) {
     const serverSelectEmojis = ["🍎", "🍌", "🥕", "🍩", "🍆"];
     let messageText = "**React to play ServerWordle!**";
     serverNames = serverNames.slice(0,5);
-    for(const [i, name] of serverNames) {
+    for(const [i, name] of serverNames.entries()) {
         messageText += `\n${serverSelectEmojis[i]} ${name}`;
     }
     let sentMessage = await this.user.send(messageText);
-    for(const [i, name] of serverNames) {
+    for(const [i, name] of serverNames.entries()) {
         sentMessage.react(serverSelectEmojis[i]);
     }
 }

@@ -171,14 +171,6 @@ WordleBot.on('messageCreate', async (message) => {
 	}
 });
 
-// WordleBot.on('messageCreate', async (message) => {
-//   if (!message.author.bot && message.channel.type === 'DM') {
-//     const msg = await message.author.send("Hello!");
-//     await msg.react("🍎");
-//     await msg.react("🍌");
-//   }
-// })
-
 WordleBot.on('messageReactionAdd', async (reaction, user) => {
 	if(reaction.partial) {
 		await reaction.fetch();
@@ -186,6 +178,10 @@ WordleBot.on('messageReactionAdd', async (reaction, user) => {
   if(reaction.message.author.bot && !user.bot && reaction.message.channel.type === 'DM') {
 		const msg = new Messages(undefined, user);
 		const userGameLogs = await db.qryUserGameLogs(user.id);
+		// if(reaction.emoji.name === "♻️") {
+		// 	console.log("debug emoji command issued");
+		// 	await msg.serverListWithReacts(await getServerNamesForUser(user));
+		// }
 		if(userGameLogs.length == 0) {
 			msg.unregisteredUser();
 			return;
@@ -209,9 +205,10 @@ async function getServerNamesForUser(user) {
 	userServersJoined = userServersJoined.slice(0, 5);
 	let serverNames = [];
 	for(const [i, serverRow] of userServersJoined.entries()) {
-		let serverName = await WordleBot.guilds.fetch(serverId);
+		let serverName = await WordleBot.guilds.fetch(serverRow.server);
 		serverNames.push(`${serverName}`); 
 	}
+	return serverNames;
 }
 
 async function tryCreateNewGameFromReaction(userID, serverID) {
@@ -339,11 +336,11 @@ async function sendFrontendResponse(message, serverId, wordleNumber, userState, 
 		const hasNewGame = await tryCreateNewGame(message, false);
 		if(hasNewGame) {
 			msg.promptCheckNewGames();
-			msg.serverListWithReacts(await getServerNamesForUser(message.author));
+			await msg.serverListWithReacts(await getServerNamesForUser(message.author));
 		}
 		else {
 			msg.nextWordleTime();
-			msg.serverListWithReacts(await getServerNamesForUser(message.author));
+			await msg.serverListWithReacts(await getServerNamesForUser(message.author));
 		}
 	}
 	else if(userState == UserStates.Guess6) {
@@ -354,11 +351,11 @@ async function sendFrontendResponse(message, serverId, wordleNumber, userState, 
 		const hasNewGame = await tryCreateNewGame(message, false);
 		if(hasNewGame) {
 			msg.promptCheckNewGames();
-			msg.serverListWithReacts(await getServerNamesForUser(message.author));
+			await msg.serverListWithReacts(await getServerNamesForUser(message.author));
 		}
 		else {
 			msg.nextWordleTime();
-			msg.serverListWithReacts(await getServerNamesForUser(message.author));
+			await msg.serverListWithReacts(await getServerNamesForUser(message.author));
 		}	
 
 	}
