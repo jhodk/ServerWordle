@@ -29,13 +29,13 @@ Messages.prototype.unregisteredUser = function() {
 }
 
 Messages.prototype.completedAllWordles = function() {
-    const timeUntilMidnight = moment(moment().format('YYYY-MM-DD') + ' 23:59:59').fromNow();
-    this.message.author.send("You're all caught up! Message me again after 0am UTC ("+timeUntilMidnight+") to try your next ServerWordle!");				
+    const timeUntilMidnight = moment(moment().format('YYYY-MM-DD') + ' 00:00:00').add(1, "days").unix();
+    this.message.author.send(`You're all caught up! Message me again <t:${timeUntilMidnight}:R> to try your next ServerWordle!`);				
 }
 
 Messages.prototype.nextWordleTime = function() {
-    const timeUntilMidnight = moment(moment().format('YYYY-MM-DD') + ' 23:59:59').fromNow();
-    this.message.author.send("Message me again after 0am UTC ("+timeUntilMidnight+") to try your next ServerWordle!");				
+    const timeUntilMidnight = moment(moment().format('YYYY-MM-DD') + ' 00:00:00').add(1, "days").unix();
+    this.message.author.send(`Message me again <t:${timeUntilMidnight}:R> to try your next ServerWordle!`);				
 }
 
 Messages.prototype.gameLogError = function() {
