@@ -31,7 +31,8 @@ Messages.prototype.firstGuessIntro = function(wordleNumber, serverName) {
 }
 
 Messages.prototype.upToDateOnServer = function(serverName) {
-    this.user.send(`You are up to date on this server! (${serverName})`);
+    const timeUntilMidnight = moment(moment().format('YYYY-MM-DD') + ' 00:00:00').add(1, "days").unix();
+    this.user.send(`You are up to date on this server! (${serverName}) Try again <t:${timeUntilMidnight}:R>.`);
 }
 
 Messages.prototype.unregisteredUser = function() {
