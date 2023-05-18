@@ -7,6 +7,7 @@
         "user": "YOURUSERNAME",
         "password": "YOURPASSWORD",
         "database": "YOURDATABASE"
-    }
-
+    },
+    "APIEndpoint":"http://sdfghjk",
+    "discord_admin_user":"1234567890"
 }

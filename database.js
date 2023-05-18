@@ -27,7 +27,7 @@ async function qryUserServerGamesWon(userId, serverId) {
     return runMySQLQuery(`SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId} AND event_type = "WIN";`);
 }
 
-async function qryUserServerCurrentWinStreak(userId, serverId) {
+async function qryUserServerLastCompletedGame(userId, serverId) {
     return runMySQLQuery(`SELECT g.* FROM game_log g WHERE g.id = (SELECT MAX(g2.id) from game_log g2 WHERE g2.server = ${serverId} AND g2.user = ${userId} AND NOT event_type = "START");`);
 }
 
@@ -155,7 +155,7 @@ module.exports = {
     qryUserServerGameRecords,
     qryUserServerGamesStarted,
     qryUserServerGamesWon,
-    qryUserServerCurrentWinStreak,
+    qryUserServerLastCompletedGame,
     qryUserServerMaxWinStreak,
     qryUserServerHardGamesCompleted,
     qryServersWithAnswers,

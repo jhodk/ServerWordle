@@ -16,10 +16,10 @@ WordleStats.prototype.handleRequest = async function (message) {
 		const userServerGamesWon = await db.qryUserServerGamesWon(message.author.id, message.guildId);
 		const winPercentage = ((userServerGamesWon.length / (numGamesStarted == 0 ? 1 : numGamesStarted)).toFixed(2))*100+"%";
 
-		const userServerCurrentWinStreak = await db.qryUserServerCurrentWinStreak(message.author.id, message.guildId);
+		const userServerLastCompletedGame = await db.qryUserServerLastCompletedGame(message.author.id, message.guildId);
 		let currentWinStreak = 0;
-		if(userServerCurrentWinStreak.length > 0){
-			currentWinStreak = userServerCurrentWinStreak[0].streak;
+		if(userServerLastCompletedGame.length > 0){
+			currentWinStreak = userServerLastCompletedGame[0].streak;
 		}
 		const userServerMaxWinStreak = await db.qryUserServerMaxWinStreak(message.author.id, message.guildId);
 		let maxStreak = 0;
