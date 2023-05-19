@@ -339,7 +339,7 @@ async function sendFrontendResponse(message, serverId, wordleNumber, userState, 
 	if(message.content.toUpperCase() == wordleAnswer) {
 		msg.wonGame(wordleNumber, userState);
 		const difficulty = getDifficulty(userGuesses,guessColours,wordleAnswer);
-		const currentStreak = await currentStreak(message.author.id, serverId, wordleNumber) + 1;
+		const currentStreak = await getCurrentStreak(message.author.id, serverId, wordleNumber) + 1;
 		await db.insertGameLogWin(message.author.id,serverId,wordleNumber,userState,difficulty,currentStreak);
 		await publishAnswer("WIN",wordleNumber,userState,guessColours,difficulty,message.author.id,serverId,currentStreak);
 		const hasNewGame = await tryCreateNewGame(message, false);
@@ -355,7 +355,7 @@ async function sendFrontendResponse(message, serverId, wordleNumber, userState, 
 	else if(userState == UserStates.Guess6) {
 		msg.lostGame(wordleNumber, wordleAnswer);
 		const difficulty = getDifficulty(userGuesses,guessColours,wordleAnswer);
-		const lostStreak = await currentStreak(message.author.id, serverId, wordleNumber);
+		const lostStreak = await getCurrentStreak(message.author.id, serverId, wordleNumber);
 		await db.insertGameLogLose(message.author.id, serverId, wordleNumber, difficulty);
 		await publishAnswer("LOSE",wordleNumber,userState,guessColours,difficulty,message.author.id,serverId,lostStreak);
 		const hasNewGame = await tryCreateNewGame(message, false);
@@ -633,7 +633,7 @@ function getDifficulty(guesses,colours,wordle) {
 	}
 }
 
-async function currentStreak(userId,serverId,wordleNumber) {
+async function getCurrentStreak(userId,serverId,wordleNumber) {
 	const userServerLastCompletedGame = await db.qryUserServerLastCompletedGame(userId, serverId);
 	if(userServerLastCompletedGame.length > 0) {
 		return userServerLastCompletedGame[0].streak;
