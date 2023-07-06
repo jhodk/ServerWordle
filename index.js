@@ -296,6 +296,7 @@ async function processGameResponse(message, wordleNumber, serverId){
 	}
 	var wordleAnswer = serverAnswer[0].answer;
 	const userSelectedGuessLog = await db.qryUserServerGuessLogSpecific(message.author.id, serverId, wordleNumber);
+	const alreadyGuessedWords = userSelectedGuessLog.map((log) => log.guess.toLowerCase());
 	const userState = userSelectedGuessLog.length+1;
 	switch(userState) {
 		case UserStates.Guess1:
@@ -304,13 +305,18 @@ async function processGameResponse(message, wordleNumber, serverId){
 		case UserStates.Guess4:
 		case UserStates.Guess5:
 		case UserStates.Guess6:				 
-			if(GuessList.includes(message.content.toLowerCase())) {	
-				sendFrontendResponse(message, serverId, wordleNumber, userState, msg);
-			}
-			else{
+			if(!GuessList.includes(message.content.toLowerCase())) {	
 				msg.invalidFiveLetterWord()
 				.then(msg => {setTimeout(() => msg.delete(), 5000)})
 				.catch(console.error);	
+			}
+			else if(alreadyGuessedWords.includes(message.content.toLowerCase())) {
+				msg.duplicateGuess(message.content.toUpperCase())
+				.then(msg => {setTimeout(() => msg.delete(), 5000)})
+				.catch(console.error);	
+			}
+			else{
+				sendFrontendResponse(message, serverId, wordleNumber, userState, msg);
 			}
 			break;
 	}

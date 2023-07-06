@@ -57,6 +57,10 @@ Messages.prototype.invalidFiveLetterWord = function() {
     return this.message.author.send("Sorry that wasn't a valid word. Please enter a different 5-letter word guess.");
 }
 
+Messages.prototype.duplicateGuess = function(word) {
+    return this.message.author.send(`You've already guessed that word (${word}). Try another one!`);
+}
+
 Messages.prototype.validGuessResponse = function(wordleNumber, serverName, userState, previousGuessButtonRows, currentGuessButtonRow) {
     this.message.author.send(`ServerWordle #${wordleNumber} (for server ${serverName})`);
 	if(userState!==1){
