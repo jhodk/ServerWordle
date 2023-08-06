@@ -109,6 +109,14 @@ Message.prototype.joinNotificationShort = function(serverName) {
     this.message.author.send("");
 }
 
+Messages.prototype.botNotAllowed = function() {
+    this.user.send("I can't start a game on that server (I might have been kicked!)");
+}
+
+Messages.prototype.terminatingGame = function() {
+    this.user.send("I can't access that server any more. Your current game will be terminated.");
+}
+
 
 module.exports = {
     Messages,

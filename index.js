@@ -182,10 +182,6 @@ WordleBot.on('messageReactionAdd', async (reaction, user) => {
   if(reaction.message.author.bot && !user.bot && reaction.message.channel.type === 'DM') {
 		const msg = new Messages(undefined, user);
 		const userGameLogs = await db.qryUserGameLogs(user.id);
-		// if(reaction.emoji.name === "♻️") {
-		// 	console.log("debug emoji command issued");
-		// 	await msg.serverListWithReacts(await getServerNamesForUser(user));
-		// }
 		if(userGameLogs.length == 0) {
 			msg.unregisteredUser();
 			return;
@@ -193,12 +189,21 @@ WordleBot.on('messageReactionAdd', async (reaction, user) => {
 		else {
 			const serverSelectEmojis = ["🍎", "🍌", "🥕", "🍩", "🍆"];
 			const selectedServerIndex = serverSelectEmojis.indexOf(reaction.emoji.name);
-			const userServersJoined = await db.qryUserServersJoined(user.id);			//get list of servers
-			if(selectedServerIndex === -1 || selectedServerIndex >= userServersJoined.length || userServersJoined.length === 0) {
+			let userServersJoined = await db.qryUserServersJoined(user.id);
+			let filteredServers = [];			//get list of servers
+			await userServersJoined.map(async (serverRow) => {
+				try{
+					await WordleBot.guilds.fetch(serverRow.server);
+					filteredServers.push(serverRow);
+				}
+				catch(e) {
+				}
+			})
+			if(selectedServerIndex === -1 || selectedServerIndex >= filteredServers.length || filteredServers.length === 0) {
 				return;
 			}
 			else {
-				await tryCreateNewGameFromReaction(user.id, userServersJoined[selectedServerIndex].server);
+				await tryCreateNewGameFromReaction(user.id, filteredServers[selectedServerIndex].server);
 			}
 		}
   }
@@ -214,8 +219,12 @@ async function getServerNamesForUser(user) {
 	userServersJoined = userServersJoined.slice(0, 5);
 	let serverNames = [];
 	for(const [i, serverRow] of userServersJoined.entries()) {
-		let serverName = await WordleBot.guilds.fetch(serverRow.server);
-		serverNames.push(`${serverName}`); 
+		try {
+			let serverName = await WordleBot.guilds.fetch(serverRow.server);
+			serverNames.push(`${serverName}`); 
+		}
+		catch(e) {
+		}
 	}
 	return serverNames;
 }
@@ -229,7 +238,16 @@ async function tryCreateNewGameFromReaction(userID, serverID) {
 		const newGameAvailable = await queryNewGameForUserServer(userID, serverID);
 		const user = await WordleBot.users.fetch(userID);
 		const msg = new Messages(undefined, user);
-		const serverName = await WordleBot.guilds.fetch(serverID);
+		
+		let serverName;
+		try {
+			serverName = await WordleBot.guilds.fetch(serverID);
+		}
+		catch(e) {
+			msg.botNotAllowed();
+			return;
+		}
+
 		if(newGameAvailable) {
 			const answerRow = await db.qryServerLatestAnswer(serverID);
 			const wordleNumber = answerRow[answerRow.length-1].wordle_number;
@@ -246,6 +264,16 @@ async function handleGame(message) {
 	const userGameLogsNotJoin = await db.qryUserGameLogsNotJoin(message.author.id);
 	const latestGameLogNotJoin = userGameLogsNotJoin[userGameLogsNotJoin.length-1];
 	if(latestGameLogNotJoin.event_type == "START") { //user is in game
+		try {
+			await WordleBot.guilds.fetch(latestGameLogNotJoin.server);
+		}
+		catch(e) {
+			const msg = new Messages(message);
+			await db.insertGameLogLose(message.author.id, latestGameLogNotJoin.server, latestGameLogNotJoin.wordle_number, "EASY");
+			msg.terminatingGame();
+			msg.serverListWithReacts(await getServerNamesForUser(message.author));
+			return;
+		}
 		await processGameResponse(message, latestGameLogNotJoin.wordle_number, latestGameLogNotJoin.server);
 	}
 	else {
@@ -260,7 +288,14 @@ async function handleGame(message) {
 async function tryCreateNewGame(message, execute=true) {
 	const userServersJoined = await db.qryUserServersJoined(message.author.id);
 	for(let serverRow of userServersJoined) {
-		const newGameFound = await queryNewGameForUserServer(message.author.id,serverRow.server);
+		let newGameFound = await queryNewGameForUserServer(message.author.id,serverRow.server);
+		try {
+			await WordleBot.guilds.fetch(serverRow.server);
+		}
+		catch(e) {
+			newGameFound = false;
+		}
+
 		if(newGameFound){ 
 			if(execute==true) {
 				const answerRow = await db.qryServerLatestAnswer(serverRow.server);
@@ -325,7 +360,16 @@ async function processGameResponse(message, wordleNumber, serverId){
 async function sendFrontendResponse(message, serverId, wordleNumber, userState, msg) {
 	const serverAnswer = await db.qryServerAnswerByWordleNumber(serverId, wordleNumber);
 	const wordleAnswer = serverAnswer[0].answer;
-	let serverName = await WordleBot.guilds.fetch(serverId);			
+	
+	let serverName;
+	try {
+		serverName = await WordleBot.guilds.fetch(serverId);			
+	}
+	catch(e) {
+		msg.terminatingGame();
+		return;
+	}
+	
 	let userGuesses = [];
 	let guessColours = [];
 	const userGuessLog = await db.qryUserServerGuessLogSpecific(message.author.id, serverId, wordleNumber);
@@ -389,7 +433,7 @@ async function publishAnswer(winOrLoseStatus,wordleNumber,userState,guessColours
 	messageString += "\n<@" + userId + ">";
 	if(winOrLoseStatus == "WIN" && streak >= 3) {
 		const emoji = await getStreakEmoji(streak);
-		messageString += " - "+streak+" win streak! " + emoji;
+		messageString += " - "+streak+" win streak! " + (streak == 100 ? "💯" : emoji);
 	}
 	if(winOrLoseStatus == "LOSE" && streak >= 3) {
 		messageString += " lost their "+streak+" win streak!";
@@ -501,15 +545,23 @@ async function aliveStatus(){
 async function refreshAnswers() {	//get list of latest wordle entries for each server
 	let allServersLatestAnswers = await db.qryAllServersLatestAnswers();
 	let now = moment();
-	for(let i = 0; i < allServersLatestAnswers.length; i++) {		
+	for(let i = 0; i < allServersLatestAnswers.length; i++) {
 		let then = moment(allServersLatestAnswers[i].date);		
 		if(now.diff(then.endOf('day'))>0) {		
+
+			try {
+				await WordleBot.guilds.fetch(allServersLatestAnswers[i].server);
+			}
+			catch(e) {
+				continue;
+			}
+
 			let pastAnswers = await db.qryServerLastNAnswers(allServersLatestAnswers[i].server, 365);
 		    let pastArr = [];
 		    for(let j = 0; j < pastAnswers.length; j++){
 		    	pastArr.push(pastAnswers[j].answer.toLowerCase());
 		    }
-			const newWordle = AnswerList.filter(e => !pastArr.includes(e))[Math.floor(Math.random()*(AnswerList.length-pastArr.length))].toUpperCase();
+			let newWordle = AnswerList.filter(e => !pastArr.includes(e))[Math.floor(Math.random()*(AnswerList.length-pastArr.length))].toUpperCase();
 			await db.insertAnswerRow(allServersLatestAnswers[i].server,newWordle,(allServersLatestAnswers[i].wordle_number+1));
 		}
 	}
@@ -518,7 +570,15 @@ async function refreshAnswers() {	//get list of latest wordle entries for each s
 async function doesUserHaveNewGame(userId) {
 	const userServersJoined = await db.qryUserServersJoined(userId);
 	for(let serverRow of userServersJoined) {
-		const newGameFound = await queryNewGameForUserServer(userId,serverRow.server);
+		let newGameFound = await queryNewGameForUserServer(userId,serverRow.server);
+
+		try {
+			await WordleBot.guilds.fetch(serverRow.server);
+		}
+		catch(e) {
+			newGameFound = false;
+		}
+
 		if(newGameFound){ 
 			return true;
 		}
@@ -585,8 +645,8 @@ async function dailyReminder() {
 			const isRecentPlayer = await hasUserPlayedRecently(userRow.user);
 			if(newGameAvailable && isRecentPlayer) {
 				console.log(userRow);
-				const user = await WordleBot.users.fetch(userRow.user);
 				try {
+					const user = await WordleBot.users.fetch(userRow.user);
 					await user.send(greeting);
 					console.log("sent reminder to "+user.username);
 				}
