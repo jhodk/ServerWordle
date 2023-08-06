@@ -103,6 +103,20 @@ async function qryServerCustomChannel(serverId) {
     return runMySQLQuery(`SELECT * FROM custom_channels WHERE server = ${serverId}`);
 }
 
+async function qryServerTop3Players(serverId) {
+    return runMySQLQuery(`SELECT user, MAX(streak) AS top_streak
+                            FROM game_log
+                            WHERE (user, date, server) IN (
+                                SELECT user, MAX(date) AS max_date, server
+                                FROM game_log
+                                WHERE server = '${serverId}'
+                                GROUP BY user, server
+                            )
+                            GROUP BY user
+                            ORDER BY top_streak DESC
+                            LIMIT 3;`);
+}
+
 //insert queries 
 
 async function insertAnswerRow(serverId, answer, wordleNumber) {
@@ -174,6 +188,7 @@ module.exports = {
     qryCompletedGames,
     qryCustomChannels,
     getScheduledMessageLastTime,
+    qryServerTop3Players,
 
 
     insertAnswerRow,

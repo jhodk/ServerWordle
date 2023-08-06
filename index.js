@@ -425,15 +425,42 @@ async function sendFrontendResponse(message, serverId, wordleNumber, userState, 
 	}
 }
 
+async function getMaxStreakMedal(userId, guildId) {
+	const userServerMaxWinStreak = await db.qryUserServerMaxWinStreak(userId, guildId);
+	let maxStreak = 0;
+	if(userServerMaxWinStreak.length > 0){
+		maxStreak = userServerMaxWinStreak[0].streak;
+	}
+	if(maxStreak < 100) return "";
+	if(maxStreak < 200) return "⭐";
+	if(maxStreak < 300) return "🌟";
+	if(maxStreak < 400) return "💫";
+	if(maxStreak < 500) return "🌌";
+	return "🐐";
+}
+
+async function getPositionMedal(userId, guildId) {
+	const top3Players = await db.qryServerTop3Players(guildId);
+	const position = top3Players.map(row => row.user).indexOf(userId);
+	const trophies = ["🥇","🥈","🥉"];
+	if(position !== undefined) {
+		return trophies[position];
+	}
+	return "";
+}
+
 async function publishAnswer(winOrLoseStatus,wordleNumber,userState,guessColours,difficulty,userId,serverId,streak) {
 	let guessString = userState;
 	if( winOrLoseStatus == "LOSE") {guessString = "X";}
 	let messageString = "ServerWordle #"+wordleNumber+" "+guessString+"/6";
 	if(difficulty == "HARD") {messageString += "*";}
-	messageString += "\n<@" + userId + ">";
+	const namePrefix = await getMaxStreakMedal(userId, guildId);
+	messageString += "\n"+namePrefix+"<@" + userId + ">";
+
 	if(winOrLoseStatus == "WIN" && streak >= 3) {
 		const emoji = await getStreakEmoji(streak);
-		messageString += " - "+streak+" win streak! " + (streak == 100 ? "💯" : emoji);
+		const positionMedal = await getPositionMedal(userId, serverId);
+		messageString += positionMedal+" - "+streak+" win streak! " + (streak == 100 ? "💯" : emoji);
 	}
 	if(winOrLoseStatus == "LOSE" && streak >= 3) {
 		messageString += " lost their "+streak+" win streak!";
