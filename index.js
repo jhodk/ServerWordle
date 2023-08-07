@@ -443,7 +443,7 @@ async function getPositionMedal(userId, guildId) {
 	const top3Players = await db.qryServerTop3Players(guildId);
 	const position = top3Players.map(row => row.user).indexOf(userId);
 	const trophies = ["🥇","🥈","🥉"];
-	if(position !== undefined) {
+	if(position !== -1) {
 		return trophies[position];
 	}
 	return "";
@@ -454,7 +454,7 @@ async function publishAnswer(winOrLoseStatus,wordleNumber,userState,guessColours
 	if( winOrLoseStatus == "LOSE") {guessString = "X";}
 	let messageString = "ServerWordle #"+wordleNumber+" "+guessString+"/6";
 	if(difficulty == "HARD") {messageString += "*";}
-	const namePrefix = await getMaxStreakMedal(userId, guildId);
+	const namePrefix = await getMaxStreakMedal(userId, serverId);
 	messageString += "\n"+namePrefix+"<@" + userId + ">";
 
 	if(winOrLoseStatus == "WIN" && streak >= 3) {
