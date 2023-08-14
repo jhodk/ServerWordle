@@ -110,6 +110,7 @@ async function qryServerTop3Players(serverId) {
                                 SELECT user, MAX(date) AS max_date, server
                                 FROM game_log
                                 WHERE server = '${serverId}'
+                                AND event_type <> 'START'
                                 GROUP BY user, server
                             )
                             GROUP BY user
