@@ -1,0 +1,15 @@
+name: Restart discord bot
+on: [workflow_dispatch]
+
+jobs: 
+    Deploy-Website-Action:
+        runs-on: ubuntu-latest
+        steps:
+          - name: restart systemd process
+            run: |
+              ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+                sudo systemctl restart wordle.service
+              EOF
+
+          
+    
