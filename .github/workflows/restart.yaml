@@ -2,7 +2,7 @@ name: Restart discord bot
 on: [workflow_dispatch]
 
 jobs: 
-    Deploy-Website-Action:
+    Restart-Discord-Bot-Action:
         runs-on: ubuntu-latest
         steps:
           - name: executing remote ssh commands using ssh key
