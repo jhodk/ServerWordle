@@ -23,7 +23,7 @@ const UserStates = {
 	Guess6:6
 }
 let customChannelCache = new Map();
-const db = require('./database.js');
+const db = require('./src/database.js');
 const WordleBot = new Client({
 	intents:[Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES, 
 			Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.DIRECT_MESSAGE_REACTIONS, 
@@ -54,13 +54,13 @@ async function test() {
 	console.log((await db.qryServersWithAnswers()));
 }
 
-const {WordleStats} = require("./wordlestats.js");
+const {WordleStats} = require("./src/wordlestats.js");
 const Stats = new WordleStats(db, WordleBot);
 
 // const {WeeklyLeaderboard} = require("./leaderboard.js");
 // const Leaderboard = new WeeklyLeaderboard(db, WordleBot);
 
-const {Messages} = require("./messages.js");
+const {Messages} = require("./src/messages.js");
 
 WordleBot.on('ready', () => {
 	console.log(`Bot ${WordleBot.user.tag} is logged in!`);

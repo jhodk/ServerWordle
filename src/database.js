@@ -1,5 +1,5 @@
 const util = require('util');
-const config = require('./config.json');
+const config = require('../config.json');
 const moment = require('moment');
 
 const {createConnection} = require('mysql2');
