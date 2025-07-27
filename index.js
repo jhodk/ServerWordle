@@ -436,7 +436,12 @@ async function getMaxStreakMedal(userId, guildId) {
 	if(maxStreak < 300) return "🌟";
 	if(maxStreak < 400) return "💫";
 	if(maxStreak < 500) return "🌌";
-	return "🐐";
+	if(maxStreak < 600) return "🐐";
+	if(maxStreak < 700) return "👨‍🍳";
+	if(maxStreak < 800) return "✍🔥";
+	if(maxStreak < 900) return "🧠";
+	if(maxStreak < 1000) return "🧙";
+	return "👑";
 }
 
 async function getPositionMedal(userId, guildId) {

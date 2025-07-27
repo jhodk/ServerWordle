@@ -1,13 +1,13 @@
 {
 	
 	"token": "YOURDISCORDBOTTOKEN",
-
+    "secret": "APISECRET",
 	"mysql": {
         "host": "localhost",
         "user": "YOURUSERNAME",
         "password": "YOURPASSWORD",
         "database": "YOURDATABASE"
     },
-    "APIEndpoint":"http://sdfghjk",
+    "APIEndpoint":"https://sdfghjk",
     "discord_admin_user":"1234567890"
 }
