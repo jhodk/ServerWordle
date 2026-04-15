@@ -56,7 +56,18 @@ async function qryUserGameLogs(userId) {
 }
 
 async function qryUserServersJoined(userId) {
-    return runMySQLQuery(`SELECT DISTINCT server FROM game_log WHERE user = ${userId} ORDER BY server ASC`);
+        return runMySQLQuery(`
+        SELECT DISTINCT gl.server
+        FROM game_log gl
+        WHERE gl.user = ?
+        AND NOT EXISTS (
+            SELECT 1
+            FROM muted_games e
+            WHERE e.user = gl.user
+            AND e.server = gl.server
+        )
+        ORDER BY gl.server ASC
+    `, [userId]);
 }
 
 async function qryUserLatestGuessLog(userId) {
