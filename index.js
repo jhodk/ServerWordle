@@ -31,10 +31,7 @@ const WordleBot = new Client({
 	partials:['CHANNEL', 'REACTION', 'MESSAGE']
 });
 
-db.connect(async  err => {
-    if (err) return console.log(err);
-    console.log(`MySQL has been connected!`);
-    console.log("Local time: "+moment().format('YYYY-MM-DD HH:mm:ss'));
+(async () => {
 	buildCustomChannelCache();
 	console.log("executing bot login");
 	await WordleBot.login(config.token);
@@ -45,7 +42,8 @@ db.connect(async  err => {
 	setInterval(refreshAnswers, 1000 * 60 * 1);
 	metricsUpdate();
 	setInterval(metricsUpdate, 1000 * 60 * 10);
-});
+})();
+
 
 async function test() {
 	console.log((await db.qryServersWithAnswers()));
