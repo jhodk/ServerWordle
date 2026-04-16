@@ -1,16 +1,15 @@
 const util = require('util');
 const config = require('../config.json');
 const moment = require('moment');
+const mysql2 = require('mysql2/promise');
 
-const {createConnection} = require('mysql2');
-let con = createConnection(config.mysql);
+console.log("Attempting database connection...");
+const pool = mysql2.createPool(config.mysql);
+console.log("Database connected");
 
-const runMySQLQuery = util.promisify(con.query).bind(con);
-
-console.log("loaded database js file");
-async function connect(func){
-    console.log("Attempting database connection...");
-    con.connect(func);
+const runMySQLQuery = async (query, args) => {
+    const [results] = await pool.query(query, args);
+    return results;
 }
 
 async function qryUserServerGameRecords(userId, serverId) {
@@ -175,7 +174,6 @@ async function insertGameLogGeneric(userId, serverId, wordleNumber, eventType, n
 }
 
 module.exports = {
-    connect,
     qryUserServerGameRecords,
     qryUserServerGamesStarted,
     qryUserServerGamesWon,
