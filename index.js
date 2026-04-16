@@ -39,13 +39,10 @@ db.connect(async  err => {
 	console.log("executing bot login");
 	await WordleBot.login(config.token);
 	console.log("done executing bot login");
-	//cache users
 	await cacheRecentUsers();
 	messageAdmin("Wordle bot restarted!");
 	refreshAnswers();
 	setInterval(refreshAnswers, 1000 * 60 * 1);
-	//aliveStatus();
-	//setInterval(aliveStatus, 1000 * 60 * 60);
 	metricsUpdate();
 	setInterval(metricsUpdate, 1000 * 60 * 10);
 });
@@ -56,18 +53,12 @@ async function test() {
 
 const {WordleStats} = require("./src/wordlestats.js");
 const Stats = new WordleStats(db, WordleBot);
-
-// const {WeeklyLeaderboard} = require("./leaderboard.js");
-// const Leaderboard = new WeeklyLeaderboard(db, WordleBot);
-
 const {Messages} = require("./src/messages.js");
 
 WordleBot.on('ready', () => {
 	console.log(`Bot ${WordleBot.user.tag} is logged in!`);
 	dailyReminder();
 	setInterval(dailyReminder, 1000 * 60 * 1);
-	// weeklyLeaderboard();
-	// setInterval(weeklyLeaderboard, 1000 * 60 * 1);
 });
 
 WordleBot.on("guildCreate", async guild => {
@@ -493,7 +484,6 @@ async function publishAnswer(winOrLoseStatus,wordleNumber,userState,guessColours
 		WordleBot.users.fetch(userId).then((user) => user.send(`Your result has been published to the ${channel.name} channel on server ${serverName}!`));
 	}
 	catch(err){
-		//no channel found
 		WordleBot.users.fetch(userId).then((user) => user.send("\"wordle-bot\" channel not found on server. Could not publish result. Please contact your server admin and ask them to use the **!summonserverwordle** command in a new channel."))
 	} 
 }
@@ -561,20 +551,14 @@ async function getStreakEmoji(num) {
 		"\:sparkles:"
 	];
 	if(num > streakEmojis.length+2) {
-		//console.log("adding prestige");
 		return "\:moyai:"+ await getStreakEmoji(num-streakEmojis.length);
 	}
 	else {
-		//console.log(streakEmojis[num-3],"added");
 		return streakEmojis[num-3];
 	}
 }
 
-async function aliveStatus(){
-	console.log("ALIVE at "+moment().format('YYYY-MM-DD HH:mm:ss'));
-}
-
-async function refreshAnswers() {	//get list of latest wordle entries for each server
+async function refreshAnswers() {
 	let allServersLatestAnswers = await db.qryAllServersLatestAnswers();
 	let now = moment();
 	for(let i = 0; i < allServersLatestAnswers.length; i++) {
@@ -690,14 +674,6 @@ async function dailyReminder() {
 		}
 
 	}
-}
-
-async function weeklyLeaderboard() {
-	// TODO
-	// const servers = await db.qryServersWithAnswers();
-	// for(let serverRow of servers) {
-	
-	// }
 }
 
 function getDifficulty(guesses,colours,wordle) {	
@@ -833,8 +809,6 @@ async function metricsUpdate() {
 		body: JSON.stringify(data),
 		headers: {"Content-Type": "application/json"}
 	}).catch(err => console.log(err));
-
-	//console.log(`Running on ${servers.length} servers with ${users} users. ${gamesPlayed.length} games completed.`);
 }
 
 async function buildCustomChannelCache() {
