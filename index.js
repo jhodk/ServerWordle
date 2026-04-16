@@ -37,7 +37,7 @@ db.connect(async  err => {
     console.log("Local time: "+moment().format('YYYY-MM-DD HH:mm:ss'));
 	buildCustomChannelCache();
 	console.log("executing bot login");
-	WordleBot.login(config.token);
+	await WordleBot.login(config.token);
 	console.log("done executing bot login");
 	//cache users
 	await cacheRecentUsers();

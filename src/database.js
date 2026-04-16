@@ -9,8 +9,6 @@ const runMySQLQuery = util.promisify(con.query).bind(con);
 
 console.log("loaded database js file");
 async function connect(func){
-    console.log("Database connecting... Waiting 10 seconds in case restart was caused by mysqld error");
-    await new Promise(resolve => setTimeout(resolve, 10000));
     console.log("Attempting database connection...");
     con.connect(func);
 }
