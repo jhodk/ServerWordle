@@ -12,14 +12,16 @@
   "dependencies": {
     "discord.js": "^13.6.0",
     "moment": "^2.29.1",
-    "mysql2": "^2.3.3"
+    "mysql2": "^3.22.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.2.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
     "globals": "^17.5.0",
     "jiti": "^2.6.1",
-    "prettier": "3.8.3",
+    "prettier": "^3.8.3",
     "typescript-eslint": "^8.58.2"
   }
 }
