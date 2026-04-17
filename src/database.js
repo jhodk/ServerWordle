@@ -13,15 +13,15 @@ const runMySQLQuery = async (query, args) => {
 }
 
 async function qryUserServerGameRecords(userId, serverId) {
-    return runMySQLQuery(`SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId};`);
+    return runMySQLQuery(`SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId} ORDER BY date;`);
 }
 
 async function qryUserServerGamesStarted(userId, serverId) {
-    return runMySQLQuery(`SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId} AND event_type = "START";`);
+    return runMySQLQuery(`SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId} AND event_type = "START" ORDER BY date;`);
 }
 
 async function qryUserServerGamesWon(userId, serverId) {
-    return runMySQLQuery(`SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId} AND event_type = "WIN";`);
+    return runMySQLQuery(`SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId} AND event_type = "WIN" ORDER BY date;`);
 }
 
 async function qryUserServerLastCompletedGame(userId, serverId) {
@@ -33,7 +33,7 @@ async function qryUserServerMaxWinStreak(userId, serverId) {
 }
 
 async function qryUserServerHardGamesCompleted(userId, serverId) {
-    return runMySQLQuery(`SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId} AND difficulty = "HARD";`);
+    return runMySQLQuery(`SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId} AND difficulty = "HARD" ORDER BY date;`);
 }
 
 async function qryServersWithAnswers() {
@@ -80,7 +80,7 @@ async function qryServerAnswerByWordleNumber(serverId, wordleNumber) {
 }
 
 async function qryUserServerGuessLogSpecific(userId, serverId, wordleNumber) {
-    return runMySQLQuery(`SELECT * FROM guess_log WHERE user = ${userId} AND wordle_number = ${wordleNumber} AND server = ${serverId}`);			
+    return runMySQLQuery(`SELECT * FROM guess_log WHERE user = ${userId} AND wordle_number = ${wordleNumber} AND server = ${serverId} ORDER BY date`);			
 }
 
 async function qryServerLastNAnswers(serverId, n) {
@@ -88,7 +88,7 @@ async function qryServerLastNAnswers(serverId, n) {
 }
 
 async function qryUserGameLogsNotJoin(userId) {
-    return runMySQLQuery(`SELECT * FROM game_log WHERE user = ${userId} AND event_type <> "JOIN";`);
+    return runMySQLQuery(`SELECT * FROM game_log WHERE user = ${userId} AND event_type <> "JOIN" ORDER BY date;`);
 }
 
 async function qryServerUniqueUsers(serverId) {
