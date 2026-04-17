@@ -6,7 +6,6 @@ import {
 	Permissions
 } from 'discord.js';
 import moment from 'moment';
-import fetch from 'node-fetch';
 import config from './config.json' with { type: 'json' };
 import words from './words.json' with { type: 'json' };
 import * as db from './src/database.js';
