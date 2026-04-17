@@ -19,7 +19,7 @@ jobs:
           - name: Run lint
             run: npm run lint
 
-          - name: executing remote ssh commands using ssh key
+          - name: set up ssh key
             run: |
                 mkdir -p ~/.ssh
                 echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
@@ -28,7 +28,18 @@ jobs:
 
           - name: copy files to remote server
             run: |
-              scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -r ./* ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/opt/ServerWordle/build
+              rsync -avz \
+                --exclude 'node_modules' \
+                --exclude '.git' \
+                -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" \
+                ./ ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/opt/ServerWordle/build
+
+          - name: install dependencies on remote server
+            run: |
+              ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+                cd /opt/ServerWordle/build
+                npm ci --omit=dev
+              EOF
 
           - name: replace existing directory
             run: |
