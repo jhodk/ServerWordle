@@ -1,58 +1,77 @@
-import config from '../config.json' with { type: 'json' };
-import moment from 'moment';
-import mysql2 from 'mysql2/promise';
+import config from "../config.json" with { type: "json" };
+import moment from "moment";
+import mysql2 from "mysql2/promise";
 
 console.log("Attempting database connection...");
 const pool = mysql2.createPool(config.mysql);
 console.log("Database connected");
 
 const runMySQLQuery = async (query, args) => {
-    const [results] = await pool.query(query, args);
-    return results;
-}
+  const [results] = await pool.query(query, args);
+  return results;
+};
 
 async function qryUserServerGameRecords(userId, serverId) {
-    return runMySQLQuery(`SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId} ORDER BY date;`);
+  return runMySQLQuery(
+    `SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId} ORDER BY date;`,
+  );
 }
 
 async function qryUserServerGamesStarted(userId, serverId) {
-    return runMySQLQuery(`SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId} AND event_type = "START" ORDER BY date;`);
+  return runMySQLQuery(
+    `SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId} AND event_type = "START" ORDER BY date;`,
+  );
 }
 
 async function qryUserServerGamesWon(userId, serverId) {
-    return runMySQLQuery(`SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId} AND event_type = "WIN" ORDER BY date;`);
+  return runMySQLQuery(
+    `SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId} AND event_type = "WIN" ORDER BY date;`,
+  );
 }
 
 async function qryUserServerLastCompletedGame(userId, serverId) {
-    return runMySQLQuery(`SELECT g.* FROM game_log g WHERE g.id = (SELECT MAX(g2.id) from game_log g2 WHERE g2.server = ${serverId} AND g2.user = ${userId} AND NOT event_type = "START");`);
+  return runMySQLQuery(
+    `SELECT g.* FROM game_log g WHERE g.id = (SELECT MAX(g2.id) from game_log g2 WHERE g2.server = ${serverId} AND g2.user = ${userId} AND NOT event_type = "START");`,
+  );
 }
 
 async function qryUserServerMaxWinStreak(userId, serverId) {
-    return runMySQLQuery(`SELECT IFNULL(MAX(g1.streak),0) AS streak FROM (SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId}) g1;`);
+  return runMySQLQuery(
+    `SELECT IFNULL(MAX(g1.streak),0) AS streak FROM (SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId}) g1;`,
+  );
 }
 
 async function qryUserServerHardGamesCompleted(userId, serverId) {
-    return runMySQLQuery(`SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId} AND difficulty = "HARD" ORDER BY date;`);
+  return runMySQLQuery(
+    `SELECT * FROM game_log WHERE user = ${userId} AND server = ${serverId} AND difficulty = "HARD" ORDER BY date;`,
+  );
 }
 
 async function qryServersWithAnswers() {
-    return runMySQLQuery(`SELECT DISTINCT server FROM answers`);
+  return runMySQLQuery(`SELECT DISTINCT server FROM answers`);
 }
 
 async function qryServerLatestAnswer(serverId) {
-    return runMySQLQuery(`SELECT a.* FROM answers a WHERE a.id = (SELECT MAX(a2.id) from answers a2 WHERE a2.server = ${serverId});`);
+  return runMySQLQuery(
+    `SELECT a.* FROM answers a WHERE a.id = (SELECT MAX(a2.id) from answers a2 WHERE a2.server = ${serverId});`,
+  );
 }
 
 async function qryAllServersLatestAnswers() {
-    return runMySQLQuery(`SELECT a.* from answers a WHERE id IN (SELECT MAX(id) FROM answers GROUP BY server);`);
+  return runMySQLQuery(
+    `SELECT a.* from answers a WHERE id IN (SELECT MAX(id) FROM answers GROUP BY server);`,
+  );
 }
 
 async function qryUserGameLogs(userId) {
-    return runMySQLQuery(`SELECT DISTINCT user FROM game_log WHERE user = ${userId};`);
+  return runMySQLQuery(
+    `SELECT DISTINCT user FROM game_log WHERE user = ${userId};`,
+  );
 }
 
 async function qryUserServersJoined(userId) {
-        return runMySQLQuery(`
+  return runMySQLQuery(
+    `
         SELECT DISTINCT gl.server
         FROM game_log gl
         WHERE gl.user = ?
@@ -63,51 +82,69 @@ async function qryUserServersJoined(userId) {
             AND e.server = gl.server
         )
         ORDER BY gl.server ASC
-    `, [userId]);
+    `,
+    [userId],
+  );
 }
 
 async function qryUserLatestGuessLog(userId) {
-    return runMySQLQuery(`SELECT g.* from guess_log g WHERE id IN (SELECT MAX(id) FROM guess_log WHERE user = ${userId});`);
+  return runMySQLQuery(
+    `SELECT g.* from guess_log g WHERE id IN (SELECT MAX(id) FROM guess_log WHERE user = ${userId});`,
+  );
 }
 
 async function qryUserLatestGameLog(userId) {
-    return runMySQLQuery(`SELECT g.* FROM game_log g WHERE g.id = (SELECT MAX(g2.id) from game_log g2 WHERE g2.user = ${userId});`);
+  return runMySQLQuery(
+    `SELECT g.* FROM game_log g WHERE g.id = (SELECT MAX(g2.id) from game_log g2 WHERE g2.user = ${userId});`,
+  );
 }
 
 async function qryServerAnswerByWordleNumber(serverId, wordleNumber) {
-    return runMySQLQuery(`SELECT a.* FROM answers a WHERE a.server = ${serverId} AND a.wordle_number = ${wordleNumber};`);
+  return runMySQLQuery(
+    `SELECT a.* FROM answers a WHERE a.server = ${serverId} AND a.wordle_number = ${wordleNumber};`,
+  );
 }
 
 async function qryUserServerGuessLogSpecific(userId, serverId, wordleNumber) {
-    return runMySQLQuery(`SELECT * FROM guess_log WHERE user = ${userId} AND wordle_number = ${wordleNumber} AND server = ${serverId} ORDER BY date`);			
+  return runMySQLQuery(
+    `SELECT * FROM guess_log WHERE user = ${userId} AND wordle_number = ${wordleNumber} AND server = ${serverId} ORDER BY date`,
+  );
 }
 
 async function qryServerLastNAnswers(serverId, n) {
-    return runMySQLQuery(`SELECT * FROM answers WHERE server = ${serverId} ORDER BY id DESC LIMIT ${n};`);
+  return runMySQLQuery(
+    `SELECT * FROM answers WHERE server = ${serverId} ORDER BY id DESC LIMIT ${n};`,
+  );
 }
 
 async function qryUserGameLogsNotJoin(userId) {
-    return runMySQLQuery(`SELECT * FROM game_log WHERE user = ${userId} AND event_type <> "JOIN" ORDER BY date;`);
+  return runMySQLQuery(
+    `SELECT * FROM game_log WHERE user = ${userId} AND event_type <> "JOIN" ORDER BY date;`,
+  );
 }
 
 async function qryServerUniqueUsers(serverId) {
-    return runMySQLQuery(`SELECT DISTINCT user FROM game_log WHERE server = ${serverId};`);
+  return runMySQLQuery(
+    `SELECT DISTINCT user FROM game_log WHERE server = ${serverId};`,
+  );
 }
 
 async function qryAllUniqueUsers() {
-    return runMySQLQuery(`SELECT DISTINCT user FROM game_log;`);
+  return runMySQLQuery(`SELECT DISTINCT user FROM game_log;`);
 }
 
 async function qryCompletedGames() {
-    return runMySQLQuery(`SELECT * FROM game_log WHERE (event_type = "WIN" OR event_type = "LOSE");`);
+  return runMySQLQuery(
+    `SELECT * FROM game_log WHERE (event_type = "WIN" OR event_type = "LOSE");`,
+  );
 }
 
 async function qryCustomChannels() {
-    return runMySQLQuery(`SELECT * FROM custom_channels;`);
+  return runMySQLQuery(`SELECT * FROM custom_channels;`);
 }
 
 async function qryServerTop3Players(serverId) {
-    return runMySQLQuery(`SELECT user, MAX(streak) AS top_streak
+  return runMySQLQuery(`SELECT user, MAX(streak) AS top_streak
                             FROM game_log
                             WHERE (user, date, server) IN (
                                 SELECT user, MAX(date) AS max_date, server
@@ -121,84 +158,130 @@ async function qryServerTop3Players(serverId) {
                             LIMIT 3;`);
 }
 
-//insert queries 
+//insert queries
 
 async function insertAnswerRow(serverId, answer, wordleNumber) {
-    return runMySQLQuery(`INSERT INTO answers values(NULL,'${moment().format('YYYY-MM-DD HH:mm:ss')}','${serverId}','${answer}','${wordleNumber}');`);
+  return runMySQLQuery(
+    `INSERT INTO answers values(NULL,'${moment().format("YYYY-MM-DD HH:mm:ss")}','${serverId}','${answer}','${wordleNumber}');`,
+  );
 }
 
 async function insertGameLogStart(userId, serverId, wordleNumber) {
-    return insertGameLogGeneric(userId, serverId, wordleNumber, "START");
+  return insertGameLogGeneric(userId, serverId, wordleNumber, "START");
 }
 
 async function insertGameLogJoin(userId, serverId, wordleNumber) {
-    return insertGameLogGeneric(userId, serverId, wordleNumber, "JOIN");
+  return insertGameLogGeneric(userId, serverId, wordleNumber, "JOIN");
 }
 
-async function insertGameLogWin(userId, serverId, wordleNumber, numGuesses, difficulty, streak) {
-    return insertGameLogGeneric(userId, serverId, wordleNumber, "WIN", `'${numGuesses}'`, `'${difficulty}'`, `'${streak}'`);
+async function insertGameLogWin(
+  userId,
+  serverId,
+  wordleNumber,
+  numGuesses,
+  difficulty,
+  streak,
+) {
+  return insertGameLogGeneric(
+    userId,
+    serverId,
+    wordleNumber,
+    "WIN",
+    `'${numGuesses}'`,
+    `'${difficulty}'`,
+    `'${streak}'`,
+  );
 }
 
 async function insertGameLogLose(userId, serverId, wordleNumber, difficulty) {
-    return insertGameLogGeneric(userId, serverId, wordleNumber, "LOSE", `'6'`, `'${difficulty}'`, `'0'`);
+  return insertGameLogGeneric(
+    userId,
+    serverId,
+    wordleNumber,
+    "LOSE",
+    `'6'`,
+    `'${difficulty}'`,
+    `'0'`,
+  );
 }
 
 async function insertGuessLog(userId, serverId, wordleNumber, guess, colours) {
-    return runMySQLQuery(`INSERT INTO guess_log values(NULL,'${moment().format('YYYY-MM-DD HH:mm:ss')}','${serverId}','${userId}','${wordleNumber}','${guess}','${colours}');`);
+  return runMySQLQuery(
+    `INSERT INTO guess_log values(NULL,'${moment().format("YYYY-MM-DD HH:mm:ss")}','${serverId}','${userId}','${wordleNumber}','${guess}','${colours}');`,
+  );
 }
 
 async function updateCustomChannel(serverId, newChannelId) {
-    await runMySQLQuery(`DELETE FROM custom_channels WHERE server = ${serverId};`);
-    await runMySQLQuery(`INSERT INTO custom_channels values(NULL,'${moment().format('YYYY-MM-DD HH:mm:ss')}','${serverId}','${newChannelId}');`);
+  await runMySQLQuery(
+    `DELETE FROM custom_channels WHERE server = ${serverId};`,
+  );
+  await runMySQLQuery(
+    `INSERT INTO custom_channels values(NULL,'${moment().format("YYYY-MM-DD HH:mm:ss")}','${serverId}','${newChannelId}');`,
+  );
 }
 
 async function getScheduledMessageLastTime(type) {
-    return runMySQLQuery(`SELECT * FROM scheduled_messages WHERE message_type = '${type}';`);
+  return runMySQLQuery(
+    `SELECT * FROM scheduled_messages WHERE message_type = '${type}';`,
+  );
 }
 
 async function updateScheduledMessageLastTime(type, nextTime) {
-    await runMySQLQuery(`DELETE FROM scheduled_messages WHERE message_type = '${type}';`);
-    await runMySQLQuery(`INSERT INTO scheduled_messages values(NULL,'${nextTime}','${type}');`);
+  await runMySQLQuery(
+    `DELETE FROM scheduled_messages WHERE message_type = '${type}';`,
+  );
+  await runMySQLQuery(
+    `INSERT INTO scheduled_messages values(NULL,'${nextTime}','${type}');`,
+  );
 }
 
 //private
 
-async function insertGameLogGeneric(userId, serverId, wordleNumber, eventType, numGuesses="NULL", difficulty="NULL", streak="NULL") {
-    //| id  | date                | server             | user               | wordle_number | event_type | num_guesses | difficulty | streak
-    return runMySQLQuery(`INSERT INTO game_log values(NULL,'${moment().format('YYYY-MM-DD HH:mm:ss')}','${serverId}','${userId}','${wordleNumber}','${eventType}',${numGuesses},${difficulty},${streak});`);
+async function insertGameLogGeneric(
+  userId,
+  serverId,
+  wordleNumber,
+  eventType,
+  numGuesses = "NULL",
+  difficulty = "NULL",
+  streak = "NULL",
+) {
+  //| id  | date                | server             | user               | wordle_number | event_type | num_guesses | difficulty | streak
+  return runMySQLQuery(
+    `INSERT INTO game_log values(NULL,'${moment().format("YYYY-MM-DD HH:mm:ss")}','${serverId}','${userId}','${wordleNumber}','${eventType}',${numGuesses},${difficulty},${streak});`,
+  );
 }
 
 export {
-    qryUserServerGameRecords,
-    qryUserServerGamesStarted,
-    qryUserServerGamesWon,
-    qryUserServerLastCompletedGame,
-    qryUserServerMaxWinStreak,
-    qryUserServerHardGamesCompleted,
-    qryServersWithAnswers,
-    qryServerLatestAnswer,
-    qryUserGameLogs,
-    qryUserServersJoined,
-    qryUserLatestGuessLog,
-    qryUserLatestGameLog,
-    qryServerAnswerByWordleNumber,
-    qryUserServerGuessLogSpecific,
-    qryAllServersLatestAnswers,
-    qryServerLastNAnswers,
-    qryUserGameLogsNotJoin,
-    qryServerUniqueUsers,
-    qryAllUniqueUsers,
-    qryCompletedGames,
-    qryCustomChannels,
-    getScheduledMessageLastTime,
-    qryServerTop3Players,
-
-    insertAnswerRow,
-    insertGameLogJoin,
-    insertGameLogStart,
-    insertGameLogWin,
-    insertGameLogLose,
-    insertGuessLog,
-    updateCustomChannel,
-    updateScheduledMessageLastTime,
-}
+  qryUserServerGameRecords,
+  qryUserServerGamesStarted,
+  qryUserServerGamesWon,
+  qryUserServerLastCompletedGame,
+  qryUserServerMaxWinStreak,
+  qryUserServerHardGamesCompleted,
+  qryServersWithAnswers,
+  qryServerLatestAnswer,
+  qryUserGameLogs,
+  qryUserServersJoined,
+  qryUserLatestGuessLog,
+  qryUserLatestGameLog,
+  qryServerAnswerByWordleNumber,
+  qryUserServerGuessLogSpecific,
+  qryAllServersLatestAnswers,
+  qryServerLastNAnswers,
+  qryUserGameLogsNotJoin,
+  qryServerUniqueUsers,
+  qryAllUniqueUsers,
+  qryCompletedGames,
+  qryCustomChannels,
+  getScheduledMessageLastTime,
+  qryServerTop3Players,
+  insertAnswerRow,
+  insertGameLogJoin,
+  insertGameLogStart,
+  insertGameLogWin,
+  insertGameLogLose,
+  insertGuessLog,
+  updateCustomChannel,
+  updateScheduledMessageLastTime,
+};
