@@ -30,14 +30,14 @@ WordleStats.prototype.handleRequest = async function (message) {
 		const hardGamePercentage = ((userServerHardGamesCompleted.length / (numGamesStarted == 0 ? 1 : numGamesStarted)).toFixed(2))*100+"%";
 		let guessDistribution = [0,0,0,0,0,0];
 		let distributionTotal = 0;
-		for(var i = 0; i < userServerGamesWon.length; i++){
+		for(let i = 0; i < userServerGamesWon.length; i++){
 			guessDistribution[userServerGamesWon[i].num_guesses-1]++;
 			distributionTotal++;
 		}
-		let userServerStatisticsMessage = "<@"+message.author.id+">\'s ServerWordle Stats\n";
+		let userServerStatisticsMessage = "<@"+message.author.id+">'s ServerWordle Stats\n";
 		userServerStatisticsMessage += "Games: "+numGamesStarted+ " | Win %: "+winPercentage+" | Streak: "+currentWinStreak+" | Max: "+maxStreak+" | Hard %: "+hardGamePercentage+"\n";
 		userServerStatisticsMessage += "Guess distribution for won games:\n```"
-		for(var i = 0; i < 6; i++){
+		for(let i = 0; i < 6; i++){
 			userServerStatisticsMessage+=(i+1)+": "
 			if(distributionTotal > 0) {userServerStatisticsMessage += "|".repeat((guessDistribution[i]/distributionTotal)*50);}
 			if(guessDistribution[i]>0){

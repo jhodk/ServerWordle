@@ -13,5 +13,13 @@
     "moment": "^2.29.1",
     "mysql2": "^2.3.3",
     "node-fetch": "^2.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.2.0",
+    "globals": "^17.5.0",
+    "jiti": "^2.6.1",
+    "prettier": "3.8.3",
+    "typescript-eslint": "^8.58.2"
   }
 }

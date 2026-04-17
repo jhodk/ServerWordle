@@ -107,10 +107,6 @@ async function qryCustomChannels() {
     return runMySQLQuery(`SELECT * FROM custom_channels;`);
 }
 
-async function qryServerCustomChannel(serverId) {
-    return runMySQLQuery(`SELECT * FROM custom_channels WHERE server = ${serverId}`);
-}
-
 async function qryServerTop3Players(serverId) {
     return runMySQLQuery(`SELECT user, MAX(streak) AS top_streak
                             FROM game_log
@@ -197,7 +193,6 @@ module.exports = {
     qryCustomChannels,
     getScheduledMessageLastTime,
     qryServerTop3Players,
-
 
     insertAnswerRow,
     insertGameLogJoin,

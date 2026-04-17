@@ -1,4 +1,3 @@
-const { Message } = require('discord.js');
 const moment = require('moment');
 
 function Messages(message = undefined, user = undefined) {
@@ -92,7 +91,7 @@ Messages.prototype.serverListWithReacts = async function(serverNames) {
         messageText += `\n${serverSelectEmojis[i]} ${name}`;
     }
     let sentMessage = await this.user.send(messageText);
-    for(const [i, name] of serverNames.entries()) {
+    for(const [i] of serverNames.entries()) {
         sentMessage.react(serverSelectEmojis[i]);
     }
 }
@@ -105,10 +104,6 @@ Messages.prototype.joinedButGameInProgress = function(serverName) {
     this.message.author.send("Joined on server "+serverName+". Don't let this distract you from your current game! Send your next guess...");
 }
 
-Message.prototype.joinNotificationShort = function(serverName) {
-    this.message.author.send("");
-}
-
 Messages.prototype.botNotAllowed = function() {
     this.user.send("I can't start a game on that server (I might have been kicked!)");
 }
@@ -116,7 +111,6 @@ Messages.prototype.botNotAllowed = function() {
 Messages.prototype.terminatingGame = function() {
     this.user.send("I can't access that server any more. Your current game will be terminated.");
 }
-
 
 module.exports = {
     Messages,
