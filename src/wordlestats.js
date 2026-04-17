@@ -49,6 +49,6 @@ WordleStats.prototype.handleRequest = async function (message) {
 		message.channel.send(userServerStatisticsMessage);
 }
 
-module.exports = {
+export {
     WordleStats
 }

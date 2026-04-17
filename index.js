@@ -1,15 +1,18 @@
-const {
+import {
 	Client,
 	Intents,
 	MessageActionRow,
 	MessageButton,
 	Permissions
-} = require('discord.js');
-const util = require('util');
-const config = require('./config.json');
-const words = require('./words.json');
-const moment = require('moment');
-const fetch = require('node-fetch');
+} from 'discord.js';
+import moment from 'moment';
+import fetch from 'node-fetch';
+import config from './config.json' with { type: 'json' };
+import words from './words.json' with { type: 'json' };
+import * as db from './src/database.js';
+import { WordleStats } from "./src/wordlestats.js";
+import { Messages } from "./src/messages.js";
+
 const GuessList = words.guesslist.concat(words.answerlist);
 const AnswerList = words.answerlist;
 const UserStates = {
@@ -20,15 +23,15 @@ const UserStates = {
 	Guess4:4,
 	Guess5:5,
 	Guess6:6
-}
+};
 let customChannelCache = new Map();
-const db = require('./src/database.js');
 const WordleBot = new Client({
 	intents:[Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES, 
 			Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.DIRECT_MESSAGE_REACTIONS, 
 			Intents.FLAGS.DIRECT_MESSAGE_TYPING],
 	partials:['CHANNEL', 'REACTION', 'MESSAGE']
 });
+const Stats = new WordleStats(db, WordleBot);
 
 (async () => {
 	buildCustomChannelCache();
@@ -43,9 +46,6 @@ const WordleBot = new Client({
 	setInterval(metricsUpdate, 1000 * 60 * 10);
 })();
 
-const {WordleStats} = require("./src/wordlestats.js");
-const Stats = new WordleStats(db, WordleBot);
-const {Messages} = require("./src/messages.js");
 
 WordleBot.on('ready', () => {
 	console.log(`Bot ${WordleBot.user.tag} is logged in!`);

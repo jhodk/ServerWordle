@@ -1,4 +1,4 @@
-const moment = require('moment');
+import moment from 'moment';
 
 function Messages(message = undefined, user = undefined) {
     this.message = message;
@@ -112,6 +112,6 @@ Messages.prototype.terminatingGame = function() {
     this.user.send("I can't access that server any more. Your current game will be terminated.");
 }
 
-module.exports = {
+export {
     Messages,
 }

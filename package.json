@@ -4,6 +4,7 @@
   "description": "Wordle for your discord server",
   "main": "index.js",
   "author": "jhodk",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

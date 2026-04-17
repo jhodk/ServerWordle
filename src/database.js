@@ -1,7 +1,6 @@
-const util = require('util');
-const config = require('../config.json');
-const moment = require('moment');
-const mysql2 = require('mysql2/promise');
+import config from '../config.json' with { type: 'json' };
+import moment from 'moment';
+import mysql2 from 'mysql2/promise';
 
 console.log("Attempting database connection...");
 const pool = mysql2.createPool(config.mysql);
@@ -169,7 +168,7 @@ async function insertGameLogGeneric(userId, serverId, wordleNumber, eventType, n
     return runMySQLQuery(`INSERT INTO game_log values(NULL,'${moment().format('YYYY-MM-DD HH:mm:ss')}','${serverId}','${userId}','${wordleNumber}','${eventType}',${numGuesses},${difficulty},${streak});`);
 }
 
-module.exports = {
+export {
     qryUserServerGameRecords,
     qryUserServerGamesStarted,
     qryUserServerGamesWon,
