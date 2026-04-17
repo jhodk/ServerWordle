@@ -8,6 +8,17 @@ jobs:
           - name: Checkout repository
             uses: actions/checkout@v4
 
+          - name: Setup Node
+            uses: actions/setup-node@v4
+            with:
+              node-version: 22
+
+          - name: Install dependencies
+            run: npm ci
+
+          - name: Run lint
+            run: npm run lint
+
           - name: executing remote ssh commands using ssh key
             run: |
                 mkdir -p ~/.ssh
@@ -18,13 +29,6 @@ jobs:
           - name: copy files to remote server
             run: |
               scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -r ./* ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/opt/ServerWordle/build
-
-          - name: install dependencies
-            run: |
-              ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
-                cd /opt/ServerWordle/build
-                npm install
-              EOF
 
           - name: replace existing directory
             run: |
