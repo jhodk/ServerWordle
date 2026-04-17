@@ -19,6 +19,9 @@ jobs:
           - name: Run lint
             run: npm run lint
 
+          - name: Build project
+            run: npm run build
+
           - name: set up ssh key
             run: |
                 mkdir -p ~/.ssh
@@ -29,10 +32,11 @@ jobs:
           - name: copy files to remote server
             run: |
               rsync -avz \
-                --exclude 'node_modules' \
-                --exclude '.git' \
                 -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" \
-                ./ ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/opt/ServerWordle/build
+                dist/ \
+                package.json \
+                package-lock.json \
+                ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/opt/ServerWordle/build
 
           - name: install dependencies on remote server
             run: |
