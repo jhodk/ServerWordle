@@ -1,5 +1,6 @@
 import {
   Client,
+  Constants,
   Intents,
   MessageActionRow,
   MessageButton,
@@ -786,17 +787,28 @@ async function getStreakEmoji(num) {
   }
 }
 
+const unknownGuilds = new Set();
+
 async function refreshAnswers() {
   let allServersLatestAnswers = await db.qryAllServersLatestAnswers();
   let now = moment();
   for (let i = 0; i < allServersLatestAnswers.length; i++) {
+    if (unknownGuilds.has(allServersLatestAnswers[i].server)) {
+      continue;
+    }
     let then = moment(allServersLatestAnswers[i].date);
     if (now.diff(then.endOf("day")) > 0) {
       try {
         await WordleBot.guilds.fetch(allServersLatestAnswers[i].server);
       } catch (e) {
+        if (e?.code === Constants.APIErrors.UNKNOWN_GUILD) {
+          console.info(`Unknown guild with id ${allServersLatestAnswers[i].server} - added to in-memory skip list`);
+          unknownGuilds.add(allServersLatestAnswers[i].server);
+          continue;
+        }
+        
         console.error(e);
-        continue;
+        continue; 
       }
 
       let pastAnswers = await db.qryServerLastNAnswers(
